@@ -1,0 +1,89 @@
+QWidget {
+    font-family: Calibri;
+    background-color: white;
+    font-size: 20px;
+    color: black;
+    font-weight: 800;
+}
+
+QToolButton {
+    border: 2px solid lightgray;
+    background-color: white;
+    border-radius: 15px;
+    padding: 10px;
+}
+
+QLineEdit {
+    padding: 5px;
+    border: 2px solid lightgray;
+    border-radius: 15px;
+}
+
+
+QComboBox {
+    padding: 5px;
+    border: 2px solid lightgray;
+    border-radius: 15px;
+}
+
+QComboBox::drop-down {
+    border: none;
+    color: black;
+}
+
+QToolButton::hover, QComboBox::hover, QLineEdit::hover {
+    background-color: rgb(230, 230, 230)
+}
+
+#projectManagerTitle {
+    font-size: 40px;
+    padding: 10px;
+}
+
+#divider {
+    border-radius: 1px;
+    border: 2px;
+    background-color: lightgray;
+}
+
+#recentsTitle {
+    font-size: 24px;
+    margin: 5px 0px 10px 0px;
+}
+
+#chooseFileNewProjectEdit {
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+#chooseFileNewProjectButton {
+    padding: 5px;
+    border: 2px solid lightgray;
+    border-left: none;
+    border-radius: 15px;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+}
+
+#chooseFileNewProjectButton::hover {
+    background-color: rgb(230, 230, 230)
+}
+
+#coloredButton {
+    background-color: rgb(66, 141, 245);
+    color: white;
+    border: none
+}
+
+#coloredButton::hover {
+    background-color: rgb(28, 95, 189);
+}
+
+#statusBarLabel {
+    font-weight: 400;
+    font-size: 15px;
+}
+
+#drawingSpace {
+    background-color: rgb(230, 230, 230)
+}
