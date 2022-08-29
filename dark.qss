@@ -1,8 +1,8 @@
 QWidget {
     font-family: Calibri;
-    background-color: white;
+    background-color: black;
     font-size: 20px;
-    color: black;
+    color: white;
     font-weight: 800;
 }
 
@@ -30,12 +30,24 @@ QComboBox::drop-down {
     color: black;
 }
 
-QScrollBar:horizontal {
-	background: none
+QToolButton::hover, QComboBox::hover, QLineEdit::hover, #chooseFileNewProjectButton::hover {
+    background-color: rgb(30, 30, 30)
 }
 
-QToolButton::hover, QComboBox::hover, QLineEdit::hover, #chooseFileNewProjectButton::hover {
-    background-color: rgb(230, 230, 230)
+QScrollBar:horizontal {
+	background: rgb(30, 30, 30);
+    height: 20px;
+}
+
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+	background: none;
+	border: none;
+}
+
+QScrollBar::handle:horizontal {
+	margin: 5px 25px 5px 25px;
+	background: white;
+	border-radius: 5px
 }
 
 #projectManagerTitle {
@@ -84,7 +96,7 @@ QToolButton::hover, QComboBox::hover, QLineEdit::hover, #chooseFileNewProjectBut
 }
 
 #drawingSpace {
-    background: rgb(240, 240, 240);
+    background: rgb(30, 30, 30);
     border-radius: 15px;
     border: none;
 }

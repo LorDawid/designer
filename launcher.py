@@ -20,7 +20,9 @@ class Launcher(QWidget):
         self.setWindowIcon(QIcon("icons/designer.png"))
         self.setWindowTitle("Projektant")
 
-        self.loadStyleSheet("light")
+
+        self.refreshSettings()
+        self.loadStyleSheet(self.settings['theme'])
 
         self.titleLayout = QVBoxLayout(self)
         self.titleLayout.setAlignment(Qt.AlignTop)
@@ -34,23 +36,29 @@ class Launcher(QWidget):
 
         self.newProjectButton = QToolButton(objectName="projectManagerButton")
         self.newProjectButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        self.newProjectButton.setIcon(QIcon("icons/dark/plus.png"))
+        self.newProjectButton.setIcon(QIcon(f"icons/{self.settings['theme']}/plus.png"))
         self.newProjectButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.newProjectButton.setText("  Stworz nowy projekt")
         self.newProjectButton.clicked.connect(self.newProject)
 
         self.openProjectButton = QToolButton(objectName="projectManagerButton")
         self.openProjectButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        self.openProjectButton.setIcon(QIcon("icons/dark/document.png"))
+        self.openProjectButton.setIcon(QIcon(f"icons/{self.settings['theme']}/document.png"))
         self.openProjectButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.openProjectButton.setText("  Otworz istniejacy projekt")
         self.openProjectButton.clicked.connect(self.openProject)
 
-        self.optionsTitle = QLabel(text="Rozpocznij", objectName="recentsTitle")
+        self.settingsButton = QToolButton(objectName="projectManagerButton")
+        self.settingsButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.settingsButton.setIcon(QIcon(f"icons/{self.settings['theme']}/settings.png"))
+        self.settingsButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.settingsButton.setText("  Ustawienia")
+        self.settingsButton.clicked.connect(self.openProject)
 
-        self.options.addWidget(self.optionsTitle)
+        self.options.addWidget(QLabel(text="Rozpocznij", objectName="recentsTitle"))
         self.options.addWidget(self.newProjectButton)
         self.options.addWidget(self.openProjectButton)
+        self.options.addWidget(self.settingsButton)
 
         self.recentsLayout = QVBoxLayout()
         self.recentsLayout.setAlignment(Qt.AlignTop)
@@ -80,13 +88,17 @@ class Launcher(QWidget):
             recents = json.loads(file.read())
 
         self.recents = []
-        for file in recents:
+        for location, file in recents.items():
             text = file["name"] + "\n" + self.PROJECTTYPES[file["type"]]
             button = QToolButton(text=text,objectName="projectButton")
             button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-            button.clicked.connect(partial(self.openEditor, projectLocation=file["location"]))
+            button.clicked.connect(partial(self.openEditor, projectLocation=location))
             self.recents.append(file)
             self.recentsLayout.addWidget(button)
+
+    def refreshSettings(self) -> None:
+        with open("settings.json", "r") as file:
+            self.settings = json.loads(file.read())
 
     def openProject(self) -> None:
         fileLocation, _ = QFileDialog.getOpenFileName(self,"Otworz projekt", "","Projekty (*.dpct)")

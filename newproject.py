@@ -1,10 +1,12 @@
-from itertools import product
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from pixel import Pixel
+import numpy as np
 import pickle
+import json
 import os
+
+extensionVersion = "1.0"
 
 class NewProject(QWidget):
     PROJECTTYPES = {
@@ -15,7 +17,8 @@ class NewProject(QWidget):
         super().__init__()
         self.resize(400, 300)
         self.show()
-        self.loadStyleSheet("light")
+        self.refreshSettings()
+        self.loadStyleSheet(self.settings['theme'])
         self.launcherWindow = launcherWindow
 
         self.setWindowIcon(QIcon("icons/designer.png"))
@@ -26,6 +29,7 @@ class NewProject(QWidget):
 
         self.projectName = QLineEdit()
         self.projectName.setFixedHeight(40)
+        self.projectName.textChanged.connect(self.projectNameChanged)
 
         self.fileLocationLayout = QHBoxLayout()
         self.fileLocationLayout.setSpacing(0)
@@ -67,13 +71,18 @@ class NewProject(QWidget):
         self.mainLayout.addWidget(self.projectType)
         self.mainLayout.addLayout(self.finalLayout)
 
-    def chooseFileLocation(self) -> None:
-        safeProjectName = self.projectName.text()
-
+    def toSafeFileName(self, name: str) -> str:
+        newName = name
         for illegalCharacter in ["#","%","&","{","}","\\","<",">","*","?","/"," ","$","!","'","\"",":","@","+","`","|","="]:
-            safeProjectName = safeProjectName.replace(illegalCharacter,"_")
+            newName = newName.replace(illegalCharacter,"_")
 
-        fileName, _ = QFileDialog.getSaveFileName(self,"Wybierz lokalizacje zapisu pliku",safeProjectName,"Projekty (*.dpct)")
+        return newName
+
+    def chooseFileLocation(self) -> None:
+        safeProjectName = self.toSafeFileName(self.projectName.text())
+        defaultDir = self.settings["defaultSaveLocation"]+safeProjectName+".dpct"
+
+        fileName, _ = QFileDialog.getSaveFileName(self,"Wybierz lokalizacje zapisu pliku", defaultDir,"Projekty (*.dpct)")
         self.fileLocationInput.setText(fileName)
 
     def cancel(self) -> None:
@@ -99,12 +108,14 @@ class NewProject(QWidget):
             self.errorMessage("Wybrany rozmiar nie jest liczbami", "Sprawdz, czy rozmiar zostal poprawnie wpisany")
             return
 
-        contents = {pixel: Pixel(*pixel, (255,0,255)) for pixel in product(range(size[0]), range(size[1]))}
+        contents = np.zeros((size[0],size[1],3), dtype=np.uint8)
 
         toWrite = {
+            "version": extensionVersion,
             "type": self.PROJECTTYPES[self.projectType.currentText()],
             "size": [self.xSize.text(), self.ySize.text()],
-            "contents": contents
+            "contents": contents,
+            "name": self.projectName.text()
         }
 
         try:
@@ -113,8 +124,17 @@ class NewProject(QWidget):
         except Exception:
             self.errorMessage("Nie mozna zapisac pliku", "Nieznany problem, sprobuj ponownie")
 
+        self.close()
         self.launcherWindow.openEditor(filePath)
 
     def loadStyleSheet(self, color: str) -> None:
         with open(f"{color}.qss", "r") as file:
             self.setStyleSheet(file.read())
+
+    def refreshSettings(self) -> None:
+        with open("settings.json", "r") as file:
+            self.settings = json.loads(file.read())
+
+    def projectNameChanged(self) -> None:
+        name = self.projectName.text()
+        self.fileLocationInput.setText(self.settings["defaultSaveLocation"]+self.toSafeFileName(name)+".dpct")
