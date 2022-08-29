@@ -128,7 +128,12 @@ if __name__ == "__main__":
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("did.designer.1.0")
 
     app = QApplication(sys.argv)
-    appWindow = Launcher()
+
+    if len(sys.argv) == 2 and os.path.exists(sys.argv[1]) and os.path.isfile(sys.argv[1]):
+        appWindow = Editor(sys.argv[1])
+    else:
+        appWindow = Launcher()
+
     appWindow.show()
     app.exec_()
     sys.exit()

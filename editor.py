@@ -295,14 +295,3 @@ class Editor(QMainWindow):
     def closeEvent(self, event: QCloseEvent) -> None:
         print("closing")
         super().closeEvent(event)
-
-if __name__ == "__main__":
-    if os.name == "nt":
-        import ctypes
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("did.designer.1.0")
-
-    app = QApplication(sys.argv)
-    appWindow = Editor(sys.argv[1])
-    appWindow.show()
-    app.exec_()
-    sys.exit()
