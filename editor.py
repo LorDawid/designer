@@ -1,10 +1,11 @@
+from fileinput import filename
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from PIL import Image
 import numpy as np
 import pickle
 import json
-import sys
 import os
 
 extensionVersion = "1.0"
@@ -38,7 +39,7 @@ class Editor(QMainWindow):
 
         self.projectSettings = QMenu("Projekt")
 
-        self.projectSettings.addAction(QAction("Zapisz projekt", self, triggered=lambda: self.saveProject(self.filepath)))
+        self.projectSettings.addAction(QAction("Zapisz projekt", self, triggered=lambda: self.saveProject(self.filepath), shortcut="Ctrl+S"))
 
         def saveAs():
             fileName, _ = QFileDialog.getSaveFileName(self,"Wybierz lokalizacje zapisu pliku", self.filepath,"Projekty (*.dpct)")
@@ -47,7 +48,7 @@ class Editor(QMainWindow):
             self.updateRecentProjects()
         self.projectSettings.addAction(QAction("Zapisz projekt jako", self, triggered=saveAs))
 
-        self.projectSettings.addAction(QAction("Wyeksportuj projekt", self))
+        self.projectSettings.addAction(QAction("Wyeksportuj projekt", self, triggered=self.exportProject))
         self.menu.addMenu(self.projectSettings)
 
 
@@ -172,6 +173,8 @@ class Editor(QMainWindow):
             self.errorMessage("Nie mozna otworzyc pliku", "Struktura pliku jest nieprawidlowa")
             return
 
+        self.statusBar().showMessage(f"Otworzono projekt z {filePath}")
+
     def saveProject(self, filePath: str) -> None:
         if not os.access(os.path.dirname(filePath), os.W_OK):
             self.errorMessage("Nie mozna zapisac pliku", "Sprawdz, czy lokalizacja pliku jest poprawna")
@@ -191,6 +194,8 @@ class Editor(QMainWindow):
         except Exception:
             self.errorMessage("Nie mozna zapisac pliku", "Nieznany problem, sprobuj ponownie")
 
+        self.statusBar().showMessage(f"Zapisano projekt w {filePath}")
+
     def updateRecentProjects(self) -> None:
         with open("recentProjects.json", "r") as file:
             recents = json.loads(file.read())
@@ -202,6 +207,17 @@ class Editor(QMainWindow):
 
         with open("recentProjects.json", "w") as file:
             recents = file.write(json.dumps(recents))
+
+    def exportProject(self) -> None:
+        suggestedName = "".join(self.filePath.split(".")[:-1])
+        fileName, _ = QFileDialog.getSaveFileName(self,"Wybierz lokalizacje zapisu pliku", suggestedName,"Obraz (*.jpg);;Obraz (*.png)")
+        if not os.access(os.path.dirname(fileName), os.W_OK):
+            self.errorMessage("Nie mozna wyeksportowac projektu", "Sprawdz, czy lokalizacja pliku jest poprawna")
+            return
+        image = Image.fromarray(self.projectData)
+        image.save(fileName)
+
+        self.statusBar().showMessage(f"Wyeksportowano projekt do {fileName}")
 
     #!Drawing board event functions
     def getPixelXYFromXY(self, coordinates: QPoint) -> tuple[int, int]:

@@ -18,7 +18,6 @@ QLineEdit {
     border-radius: 15px;
 }
 
-
 QComboBox {
     padding: 5px;
     border: 2px solid lightgray;
@@ -82,7 +81,7 @@ QToolButton::hover, QComboBox::hover, QLineEdit::hover, #chooseFileNewProjectBut
     background-color: rgb(28, 95, 189);
 }
 
-#statusBarLabel, QMenu, QMenuBar {
+#statusBarLabel, QMenu, QMenuBar, QStatusBar {
     font-weight: 400;
     font-size: 15px;
 }
