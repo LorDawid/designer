@@ -90,12 +90,27 @@ class Launcher(QWidget):
         self.recents = []
         for location, file in recents.items():
             if not (os.path.exists(location) and os.path.isfile(location)): location = "Plik zostal usuniety lub przeniesiony"
-            text = file["name"] + "\n" + self.PROJECTTYPES[file["type"]] + "\n" + location
-            button = QToolButton(text=text,objectName="projectButton")
-            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+            layout = QHBoxLayout()
+            layout.setSpacing(0)
+
+            button = QToolButton(text=">",objectName="projectButton")
+            button.setMaximumWidth(50)
+            button.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
             button.clicked.connect(partial(self.openEditor, projectLocation=location))
+
+            location = (location[:40] + '...') if len(location) > 40 else location
+            file["name"] = (file["name"][:35] + '...') if len(file["name"]) > 35 else file["name"]
+            text = f"""
+            {file['name']}<br>
+            <font color='black' size=5px>{self.PROJECTTYPES[file['type']]}</font>
+            <font color='lightgray' size=5px>{location}</font>"""
+
+            label = QLabel(text=text, objectName="projectLabel")
+            label.setTextFormat(Qt.RichText)
+            layout.addWidget(label)
+            layout.addWidget(button)
+            self.recentsLayout.addLayout(layout)
             self.recents.append(file)
-            self.recentsLayout.addWidget(button)
 
     def refreshSettings(self) -> None:
         with open("settings.json", "r") as file:

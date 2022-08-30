@@ -100,3 +100,18 @@ QScrollBar::handle:horizontal {
     border-radius: 15px;
     border: none;
 }
+
+#projectButton {
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-left: none;
+}
+
+#projectLabel {
+    padding: 5px;
+    border: 2px solid lightgray;
+    border-right: none;
+    border-radius: 15px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
