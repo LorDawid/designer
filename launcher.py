@@ -89,7 +89,8 @@ class Launcher(QWidget):
 
         self.recents = []
         for location, file in recents.items():
-            text = file["name"] + "\n" + self.PROJECTTYPES[file["type"]]
+            if not (os.path.exists(location) and os.path.isfile(location)): location = "Plik zostal usuniety lub przeniesiony"
+            text = file["name"] + "\n" + self.PROJECTTYPES[file["type"]] + "\n" + location
             button = QToolButton(text=text,objectName="projectButton")
             button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
             button.clicked.connect(partial(self.openEditor, projectLocation=location))

@@ -40,12 +40,29 @@ class Editor(QMainWindow):
         self.zoomIndicator = QLabel(text=f"{self.zoom*100}%", objectName="statusBarLabel")
         self.statusBar().addPermanentWidget(self.zoomIndicator)
 
+        self.menu = self.menuBar()
+
+        self.projectSettings = QMenu("Projekt")
+
+        self.projectSettings.addAction(QAction("Zapisz projekt", self, triggered=lambda: self.saveProject(self.filepath)))
+
+        def saveAs():
+            fileName, _ = QFileDialog.getSaveFileName(self,"Wybierz lokalizacje zapisu pliku", self.filepath,"Projekty (*.dpct)")
+            self.saveProject(fileName)
+            self.filepath = fileName
+            self.updateRecentProjects()
+        self.projectSettings.addAction(QAction("Zapisz projekt jako", self, triggered=saveAs))
+
+        self.projectSettings.addAction(QAction("Wyeksportuj projekt", self))
+        self.menu.addMenu(self.projectSettings)
+
+
         self.mainLayout = QVBoxLayout(self.mainWidget)
 
         self.toolsLayout = QHBoxLayout()
         self.toolsLayout.setAlignment(Qt.AlignLeft)
 
-        brushButton = QToolButton(text="Brush", clicked=lambda: self.changeTool("brush"))
+        brushButton = QToolButton(text="Pedzel", clicked=lambda: self.changeTool("brush"))
         brushButton.setMaximumSize(80, 150)
         brushButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         brushButton.setIcon(QIcon(f"icons/{self.settings['theme']}/brush.png"))
@@ -53,7 +70,7 @@ class Editor(QMainWindow):
         brushButton.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         self.toolsLayout.addWidget(brushButton)
 
-        lineButton = QToolButton(text="Line", clicked=lambda: self.changeTool("line"))
+        lineButton = QToolButton(text="Linia", clicked=lambda: self.changeTool("line"))
         lineButton.setMaximumSize(80, 150)
         lineButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         lineButton.setIcon(QIcon(f"icons/{self.settings['theme']}/line.png"))
@@ -112,9 +129,10 @@ class Editor(QMainWindow):
             self.settings = json.loads(file.read())
 
     #!Project management functions
-    def loadProject(self, project: str) -> None:
+    def loadProject(self, filePath: str) -> None:
+        self.filePath = filePath
         try:
-            with open(project, "rb") as f:
+            with open(filePath, "rb") as f:
                 projectData = pickle.load(f)
 
             if projectData["version"] != extensionVersion:
@@ -126,6 +144,7 @@ class Editor(QMainWindow):
             self.projectData = projectData["contents"]
             self.lastState = self.projectData
             self.beforeLineState = self.projectData
+            self.setWindowTitle("Projektant - "+self.projectName)
 
             self.updateRecentProjects()
         except FileNotFoundError:
@@ -144,7 +163,8 @@ class Editor(QMainWindow):
             "version": extensionVersion,
             "type": self.projectType,
             "size": self.projectSize,
-            "contents": self.projectData
+            "contents": self.projectData,
+            "name": self.projectName
         }
 
         try:
@@ -242,7 +262,7 @@ class Editor(QMainWindow):
         self.projectData[pixel] = self.color
         self.drawPixels()
 
-    def line(self, end: QPoint) -> None:
+    def line(self, end: tuple[int, int]) -> None:
         """Draws a line from point to point
 
         Args:
@@ -273,7 +293,7 @@ class Editor(QMainWindow):
         self.mouseDown = True
         self.lastState = np.copy(self.projectData)
         self.beforeLineState = np.copy(self.projectData)
-        self.mouseDownPosition = event.pos()
+        self.mouseDownPosition = event.pos().x(), event.pos().y()-23
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         super().mouseReleaseEvent(event)
@@ -281,7 +301,8 @@ class Editor(QMainWindow):
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         super().mouseMoveEvent(event)
-        pixel = self.getPixelXYFromXY(event.pos())
+        pos = event.pos().x(), event.pos().y() - 23
+        pixel = self.getPixelXYFromXY(pos)
 
         self.tools[self.tool](pixel)
         self.drawPixels()

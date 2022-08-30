@@ -78,7 +78,7 @@ QToolButton::hover, QComboBox::hover, QLineEdit::hover, #chooseFileNewProjectBut
     background-color: rgb(28, 95, 189);
 }
 
-#statusBarLabel {
+#statusBarLabel, QMenu, QMenuBar {
     font-weight: 400;
     font-size: 15px;
 }
