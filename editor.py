@@ -48,7 +48,7 @@ class Editor(QMainWindow):
             self.updateRecentProjects()
         self.projectSettings.addAction(QAction("Zapisz projekt jako", self, triggered=saveAs))
 
-        self.projectSettings.addAction(QAction("Wyeksportuj projekt", self, triggered=self.exportProject))
+        self.projectSettings.addAction(QAction("Wyeksportuj projekt", self, triggered=self.exportProject, shortcut="Ctrl+E"))
         self.menu.addMenu(self.projectSettings)
 
 
@@ -141,14 +141,21 @@ class Editor(QMainWindow):
             self.setStyleSheet(file.read())
 
     def refreshSettings(self) -> None:
+        """Loads settings from settings.json"""
         with open("settings.json", "r") as file:
             self.settings = json.loads(file.read())
 
     def refreshStyleSheet(self, widget: QWidget) -> None:
+        """Refreshes stylesheet of specified widget"""
         widget.setStyleSheet(widget.styleSheet())
 
     #!Project management functions
     def loadProject(self, filePath: str) -> None:
+        """Loads project from file path
+
+        Args:
+            filePath (str): File path
+        """
         self.filePath = filePath
         try:
             with open(filePath, "rb") as f:
@@ -176,6 +183,11 @@ class Editor(QMainWindow):
         self.statusBar().showMessage(f"Otworzono projekt z {filePath}")
 
     def saveProject(self, filePath: str) -> None:
+        """Saves project to specified file
+
+        Args:
+            filePath (str): File path
+        """
         if not os.access(os.path.dirname(filePath), os.W_OK):
             self.errorMessage("Nie mozna zapisac pliku", "Sprawdz, czy lokalizacja pliku jest poprawna")
             return
@@ -197,6 +209,8 @@ class Editor(QMainWindow):
         self.statusBar().showMessage(f"Zapisano projekt w {filePath}")
 
     def updateRecentProjects(self) -> None:
+        """Updates recent project list with current project
+        """
         with open("recentProjects.json", "r") as file:
             recents = json.loads(file.read())
 
@@ -209,6 +223,7 @@ class Editor(QMainWindow):
             recents = file.write(json.dumps(recents))
 
     def exportProject(self) -> None:
+        """Exports project to json"""
         suggestedName = "".join(self.filePath.split(".")[:-1])
         fileName, _ = QFileDialog.getSaveFileName(self,"Wybierz lokalizacje zapisu pliku", suggestedName,"Obraz (*.jpg);;Obraz (*.png)")
         if not os.access(os.path.dirname(fileName), os.W_OK):
@@ -269,6 +284,11 @@ class Editor(QMainWindow):
         return (0 <= pixel[0] < self.projectSize[0]) and (0 <= pixel[1] < self.projectSize[1])
 
     def zoomImage(self, zoomAmount: float) -> None:
+        """Zooms the image by specified amount
+
+        Args:
+            zoomAmount (float): How much to zoom
+        """
         self.zoom += zoomAmount/500
         if self.zoom <= .1:
             self.zoom -= zoomAmount/500
@@ -277,6 +297,11 @@ class Editor(QMainWindow):
 
     #!Tool functions
     def changeColor(self, color: tuple[int,int,int] = None) -> None:
+        """Changes tool color to specified value, if not specified, it will display color picker
+
+        Args:
+            color (tuple[int,int,int], optional): Chosen color. Defaults to color picker.
+        """
         if color is None:
             x = QColorDialog.getColor()
             self.color = x.getRgb()[:-1]
@@ -327,6 +352,11 @@ class Editor(QMainWindow):
             self.drawPixels()
 
     def colorPicker(self, pixel: tuple[int, int]) -> None:
+        """Function used by color picker tool
+
+        Args:
+            pixel (tuple[int, int]): Pixel that we will take color info from
+        """
         self.changeColor(self.projectData[self.pixelXYToNpXY(pixel)])
         self.changeTool(self.lastTool)
 
@@ -362,5 +392,4 @@ class Editor(QMainWindow):
             self.drawPixels()
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        print("closing")
         super().closeEvent(event)

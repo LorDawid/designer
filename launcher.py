@@ -102,7 +102,7 @@ class Launcher(QWidget):
             file["name"] = (file["name"][:35] + '...') if len(file["name"]) > 35 else file["name"]
             text = f"""
             {file['name']}<br>
-            <font color='black' size=5px>{self.PROJECTTYPES[file['type']]}</font>
+            <font size=5px>{self.PROJECTTYPES[file['type']]}</font>
             <font color='lightgray' size=5px>{location}</font>"""
 
             label = QLabel(text=text, objectName="projectLabel")
