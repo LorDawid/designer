@@ -34,7 +34,11 @@ QScrollBar:horizontal {
 	background: none
 }
 
-QToolButton::hover, QComboBox::hover, QLineEdit::hover, #chooseFileNewProjectButton::hover {
+QScrollBar:vertical {
+	background: none
+}
+
+QToolButton::hover, QComboBox::hover, QLineEdit::hover, #chooseFileNewProjectButton::hover, #activeButton {
     background-color: rgb(230, 230, 230)
 }
 

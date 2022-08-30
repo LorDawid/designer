@@ -30,7 +30,7 @@ QComboBox::drop-down {
     color: black;
 }
 
-QToolButton::hover, QComboBox::hover, QLineEdit::hover, #chooseFileNewProjectButton::hover {
+QToolButton::hover, QComboBox::hover, QLineEdit::hover, #chooseFileNewProjectButton::hover, #activeButton {
     background-color: rgb(30, 30, 30)
 }
 
@@ -39,13 +39,29 @@ QScrollBar:horizontal {
     height: 20px;
 }
 
+QScrollBar:vertical {
+	background: rgb(30, 30, 30);
+    width: 20px;
+}
+
 QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+	background: none;
+	border: none;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 	background: none;
 	border: none;
 }
 
 QScrollBar::handle:horizontal {
 	margin: 5px 25px 5px 25px;
+	background: white;
+	border-radius: 5px
+}
+
+QScrollBar::handle:vertical {
+	margin: 25px 5px 25px 5px;
 	background: white;
 	border-radius: 5px
 }
