@@ -1,4 +1,5 @@
 from PIL import Image, ImageDraw
+from functools import partial
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -35,7 +36,8 @@ class TrackingLabel(QLabel):
 class Editor(QMainWindow):
     def __init__(self, filepath: str) -> None:
         self.zoom = 1
-        self.color = (255, 255, 255)
+        self.lastColors = [(255,255,255) for _ in range(0, 8)]
+        self.color = (0, 0, 0)
         self.tool = "brush"
         self.mouseDown = False
 
@@ -114,12 +116,20 @@ class Editor(QMainWindow):
         bucketButton.setIconSize(QSize(32, 32))
         self.toolsLayout.addWidget(bucketButton)
 
-        qss = "#colorButton {border: 2px solid lightgray;border-radius: 15px;background-color:rgb%}".replace("%", str(tuple(self.color)))
+        div = QLabel(objectName="divider")
+        div.setFixedWidth(2)
+        self.toolsLayout.addWidget(div)
+
+        qss = "border: 2px solid lightgray;border-radius: 24px;background-color:rgb%".replace("%", str(tuple(self.color)))
         colorButton = QToolButton(clicked=lambda: self.changeColor())
         colorButton.setMaximumSize(48, 48)
         colorButton.setStyleSheet(qss)
         colorButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.toolsLayout.addWidget(colorButton)
+
+        self.lastColorsLayout = QGridLayout()
+        self.refreshLastColors()
+        self.toolsLayout.addLayout(self.lastColorsLayout)
 
         self.toolButtons = {
             "brush": brushButton,
@@ -178,6 +188,29 @@ class Editor(QMainWindow):
     def refreshStyleSheet(self, widget: QWidget) -> None:
         """Refreshes stylesheet of specified widget"""
         widget.setStyleSheet(widget.styleSheet())
+
+    def deleteLayoutContents(self, layout):
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+                else:
+                    self.deleteLayoutContents(item.layout())
+
+    #!UI generation functions
+    def refreshLastColors(self) -> None:
+        self.deleteLayoutContents(self.lastColorsLayout)
+        for index, color in enumerate(self.lastColors):
+            qss = "border: 2px solid lightgray;border-radius: 12px;background-color:rgb%".replace("%", str(tuple(color)))
+            row = index//4
+            column = index%4
+            button = QToolButton()
+            button.setStyleSheet(qss)
+            button.setMaximumSize(24, 24)
+            button.clicked.connect(partial(self.changeColor, color=color))
+            self.lastColorsLayout.addWidget(button, row, column)
 
     #!Project management functions
     def loadProject(self, filePath: str) -> None:
@@ -336,11 +369,15 @@ class Editor(QMainWindow):
         """
         if color is None:
             x = QColorDialog.getColor()
-            self.color = x.getRgb()[:-1]
-        else:
-            self.color = color
+            color = x.getRgb()[:-1]
 
-        qss = "border: 2px solid lightgray;border-radius: 15px;background-color:rgb%".replace("%", str(tuple(self.color)))
+        self.lastColors.insert(0, self.color)
+        self.lastColors = self.lastColors[:-1]
+        self.refreshLastColors()
+
+        self.color = color
+
+        qss = "border: 2px solid lightgray;border-radius: 24px;background-color:rgb%".replace("%", str(tuple(self.color)))
         self.toolButtons["color"].setStyleSheet(qss)
 
     def changeTool(self, tool: str) -> None:
