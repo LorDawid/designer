@@ -33,6 +33,12 @@ class TrackingLabel(QLabel):
         self.mainWindow.drawingBoardMoveEvent(event)
         super().mouseMoveEvent(event)
 
+class Divider(QLabel):
+    def __init__(self):
+        super().__init__()
+        self.setFixedWidth(2)
+        self.setObjectName("divider")
+
 class Editor(QMainWindow):
     def __init__(self, filepath: str) -> None:
         self.zoom = 1
@@ -53,10 +59,10 @@ class Editor(QMainWindow):
         self.filepath = filepath
         self.loadProject(self.filepath)
 
-        sizeMessage = QLabel(text = f"  Rozmiar: {self.projectSize[0]} x {self.projectSize[1]}  ", objectName="statusBarLabel")
+        sizeMessage = QLabel(text = f"  Rozmiar: {self.projectSize[0]} x {self.projectSize[1]}  ", objectName="smallLabel")
         self.statusBar().addPermanentWidget(sizeMessage)
 
-        self.zoomIndicator = QLabel(text=f"{self.zoom*100}%", objectName="statusBarLabel")
+        self.zoomIndicator = QLabel(text=f"{self.zoom*100}%", objectName="smallLabel")
         self.statusBar().addPermanentWidget(self.zoomIndicator)
 
         self.menu = self.menuBar()
@@ -116,9 +122,7 @@ class Editor(QMainWindow):
         bucketButton.setIconSize(QSize(32, 32))
         self.toolsLayout.addWidget(bucketButton)
 
-        div = QLabel(objectName="divider")
-        div.setFixedWidth(2)
-        self.toolsLayout.addWidget(div)
+        self.toolsLayout.addWidget(Divider())
 
         qss = "border: 2px solid lightgray;border-radius: 24px;background-color:rgb%".replace("%", str(tuple(self.color)))
         colorButton = QToolButton(clicked=lambda: self.changeColor())
@@ -130,6 +134,8 @@ class Editor(QMainWindow):
         self.lastColorsLayout = QGridLayout()
         self.refreshLastColors()
         self.toolsLayout.addLayout(self.lastColorsLayout)
+
+        self.toolsLayout.addWidget(Divider())
 
         self.toolButtons = {
             "brush": brushButton,

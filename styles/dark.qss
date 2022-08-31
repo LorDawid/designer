@@ -105,9 +105,13 @@ QScrollBar::handle:vertical {
     background-color: rgb(28, 95, 189);
 }
 
-#statusBarLabel, QMenu, QMenuBar, QStatusBar {
+#smallLabel, QMenu, QMenuBar, QStatusBar {
     font-weight: 400;
     font-size: 15px;
+}
+
+#reallySmallLabel {
+    font-size: 12px;
 }
 
 #drawingSpace {
@@ -129,8 +133,4 @@ QScrollBar::handle:vertical {
     border-radius: 15px;
     border-top-right-radius: 0px;
     border-bottom-right-radius: 0px;
-}
-
-#smallProjectSettingsHints {
-    font-size: 15px;
 }

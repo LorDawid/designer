@@ -55,7 +55,7 @@ class NewProject(QWidget):
         self.sizeLayout.addWidget(QLabel(text="x"))
         self.sizeLayout.addWidget(self.ySize)
 
-        self.estSize = QLabel(text="Szacowany rozmiar: 0B", objectName="smallProjectSettingsHints")
+        self.estSize = QLabel(text="Szacowany rozmiar: 0B", objectName="smallLabel")
 
         self.projectType = QComboBox()
         self.projectType.addItems(["Bransoletka"])

@@ -81,10 +81,20 @@ QToolButton::hover, QComboBox::hover, QLineEdit::hover, #chooseFileNewProjectBut
     background-color: rgb(28, 95, 189);
 }
 
-#statusBarLabel, QMenu, QMenuBar, QStatusBar {
+#smallLabel, QMenu, QMenuBar, QStatusBar {
     font-weight: 400;
     font-size: 15px;
 }
+
+#smallLabel, QMenu, QMenuBar, QStatusBar {
+    font-weight: 400;
+    font-size: 15px;
+}
+
+#reallySmallLabel {
+    font-size: 12px;
+}
+
 
 #drawingSpace {
     background: rgb(240, 240, 240);
@@ -105,8 +115,4 @@ QToolButton::hover, QComboBox::hover, QLineEdit::hover, #chooseFileNewProjectBut
     border-radius: 15px;
     border-top-right-radius: 0px;
     border-bottom-right-radius: 0px;
-}
-
-#smallProjectSettingsHints {
-    font-size: 15px;
 }
