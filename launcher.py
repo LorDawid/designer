@@ -80,7 +80,7 @@ class Launcher(QWidget):
         self.titleLayout.setStretch(1, 1)
 
     def loadStyleSheet(self, color: str) -> None:
-        with open(f"{color}.qss", "r") as file:
+        with open(f"styles/{color}.qss", "r") as file:
             self.setStyleSheet(file.read())
 
     def loadRecentProjects(self) -> None:

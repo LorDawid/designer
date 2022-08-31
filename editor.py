@@ -177,7 +177,7 @@ class Editor(QMainWindow):
         Args:
             color (str): file name (no extensions)
         """
-        with open(f"{color}.qss", "r") as file:
+        with open(f"styles/{color}.qss", "r") as file:
             self.setStyleSheet(file.read())
 
     def refreshSettings(self) -> None:

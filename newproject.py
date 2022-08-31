@@ -137,7 +137,7 @@ class NewProject(QWidget):
         self.launcherWindow.openEditor(filePath)
 
     def loadStyleSheet(self, color: str) -> None:
-        with open(f"{color}.qss", "r") as file:
+        with open(f"styles/{color}.qss", "r") as file:
             self.setStyleSheet(file.read())
 
     def refreshSettings(self) -> None:
