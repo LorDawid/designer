@@ -1,3 +1,4 @@
+from array import array
 from PIL import Image, ImageDraw
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -10,6 +11,27 @@ import os
 import tools.line
 
 extensionVersion = "1.0"
+
+#Those two classes exists to be able to track mouse movement when not pressed
+class TrackingScrollArea(QScrollArea):
+    def __init__(self, mainWindow, parent, objectName):
+        super().__init__()
+        self.mainWindow = mainWindow
+        self.setParent(parent)
+        self.setObjectName(objectName)
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        self.mainWindow.drawingBoardMoveEvent(event)
+        super().mouseMoveEvent(event)
+
+class TrackingLabel(QLabel):
+    def __init__(self, mainWindow):
+        super().__init__()
+        self.mainWindow = mainWindow
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        self.mainWindow.drawingBoardMoveEvent(event)
+        super().mouseMoveEvent(event)
 
 class Editor(QMainWindow):
     def __init__(self, filepath: str) -> None:
@@ -59,51 +81,45 @@ class Editor(QMainWindow):
         self.toolsLayout.setAlignment(Qt.AlignLeft)
 
         self.tools = {
-            "brush": self.brush,
-            "line": self.line,
-            "picker": self.colorPicker,
-            "bucket": self.bucket,
+            "brush":  [self.brush, None],
+            "line":   [self.line, None],
+            "picker": [self.colorPicker, self.colorPickerMove],
+            "bucket": [self.bucket, None],
         }
 
-        brushButton = QToolButton(text="Pedzel", clicked=lambda: self.changeTool("brush"))
-        brushButton.setMaximumSize(80, 150)
+        brushButton = QToolButton(clicked=lambda: self.changeTool("brush"))
+        brushButton.setMaximumSize(48, 48)
         brushButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         brushButton.setIcon(QIcon(f"icons/{self.settings['theme']}/brush.png"))
-        brushButton.setIconSize(QSize(48, 48))
-        brushButton.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        brushButton.setIconSize(QSize(32, 32))
         self.toolsLayout.addWidget(brushButton)
 
-        lineButton = QToolButton(text="Linia", clicked=lambda: self.changeTool("line"))
-        lineButton.setMaximumSize(80, 150)
+        lineButton = QToolButton(clicked=lambda: self.changeTool("line"))
+        lineButton.setMaximumSize(48, 48)
         lineButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         lineButton.setIcon(QIcon(f"icons/{self.settings['theme']}/line.png"))
-        lineButton.setIconSize(QSize(48, 48))
-        lineButton.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        lineButton.setIconSize(QSize(32, 32))
         self.toolsLayout.addWidget(lineButton)
 
-        pickerButton = QToolButton(text="3", clicked=lambda: self.changeTool("picker"))
-        pickerButton.setMaximumSize(80, 150)
+        pickerButton = QToolButton(clicked=lambda: self.changeTool("picker"))
+        pickerButton.setMaximumSize(48, 48)
         pickerButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         pickerButton.setIcon(QIcon(f"icons/{self.settings['theme']}/picker.png"))
-        pickerButton.setIconSize(QSize(48, 48))
-        pickerButton.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        pickerButton.setIconSize(QSize(32, 32))
         self.toolsLayout.addWidget(pickerButton)
 
-        bucketButton = QToolButton(text="3", clicked=lambda: self.changeTool("bucket"))
-        bucketButton.setMaximumSize(80, 150)
+        bucketButton = QToolButton(clicked=lambda: self.changeTool("bucket"))
+        bucketButton.setMaximumSize(48, 48)
         bucketButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         bucketButton.setIcon(QIcon(f"icons/{self.settings['theme']}/bucket.png"))
-        bucketButton.setIconSize(QSize(48, 48))
-        bucketButton.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        bucketButton.setIconSize(QSize(32, 32))
         self.toolsLayout.addWidget(bucketButton)
 
-        colorButton = QToolButton(text="Kolor", clicked=lambda: self.changeColor())
-        colorButton.setMaximumSize(80, 150)
+        qss = "#colorButton {border: 2px solid lightgray;border-radius: 15px;background-color:rgb%}".replace("%", str(tuple(self.color)))
+        colorButton = QToolButton(clicked=lambda: self.changeColor())
+        colorButton.setMaximumSize(48, 48)
+        colorButton.setStyleSheet(qss)
         colorButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        colorIcon = QImage(np.full((48,48,3), self.color, dtype=np.uint8), 48, 48, QImage.Format_RGB888)
-        colorButton.setIcon(QIcon(QPixmap.fromImage(colorIcon)))
-        colorButton.setIconSize(QSize(48, 48))
-        colorButton.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         self.toolsLayout.addWidget(colorButton)
 
         self.toolButtons = {
@@ -114,12 +130,16 @@ class Editor(QMainWindow):
             "bucket": bucketButton,
         }
 
-        self.drawingBoard = QLabel()
-        self.drawingBoardScroll = QScrollArea(self.mainWidget, objectName="drawingSpace")
+        self.drawingBoard = TrackingLabel(self)
+        self.drawingBoard.setMouseTracking(True)
+        self.drawingBoardScroll = TrackingScrollArea(self, self.mainWidget, objectName="drawingSpace")
+        self.drawingBoardScroll.setMouseTracking(True)
         self.drawingBoardScroll.setWidgetResizable(True)
         self.drawingBoardScroll.setWidget(self.drawingBoard)
         self.drawingBoardScroll.setAlignment(Qt.AlignCenter)
         self.drawingBoardScroll.setCursor(QCursor(Qt.CrossCursor))
+
+        self.toolLabel = QLabel(self, objectName="toolLabel")
 
         self.mainLayout.addLayout(self.toolsLayout)
         self.mainLayout.addWidget(self.drawingBoardScroll)
@@ -287,12 +307,14 @@ class Editor(QMainWindow):
         """Checks if pixel is within the image
 
         Args:
-            pixel (tuple[int, int]): ndarray coordinates of point
+            pixel (tuple[int, int]): xy coordinates of point
 
         Returns:
             bool: Is the point in the image?
         """
-        return (0 <= pixel[0] < self.projectSize[0]) and (0 <= pixel[1] < self.projectSize[1])
+        x = 0 <= pixel[0] < self.projectSize[0]
+        y = 0 <= pixel[1] < self.projectSize[1]
+        return x and y 
 
     def zoomImage(self, zoomAmount: float) -> None:
         """Zooms the image by specified amount
@@ -318,8 +340,9 @@ class Editor(QMainWindow):
             self.color = x.getRgb()[:-1]
         else:
             self.color = color
-        colorIcon = QImage(np.full((48,48,3), self.color, dtype=np.uint8), 48, 48, QImage.Format_RGB888)
-        self.toolButtons["color"].setIcon(QIcon(QPixmap.fromImage(colorIcon)))
+
+        qss = "border: 2px solid lightgray;border-radius: 15px;background-color:rgb%".replace("%", str(tuple(self.color)))
+        self.toolButtons["color"].setStyleSheet(qss)
 
     def changeTool(self, tool: str) -> None:
         """Changes tool."""
@@ -336,8 +359,8 @@ class Editor(QMainWindow):
         Args:
             pixel (tuple[int, int]): Takes pixel that will become colored
         """
-        pixel = self.pixelXYToNpXY(pixel)
         if not self.checkXYWithinImage(pixel): return
+        pixel = self.pixelXYToNpXY(pixel)
         self.projectData[pixel] = self.color
         self.drawPixels()
 
@@ -350,8 +373,8 @@ class Editor(QMainWindow):
         """
         start = self.getPixelXYFromXY(self.mouseDownPosition)
 
-        if not self.checkXYWithinImage(self.pixelXYToNpXY(start)): return
-        if not self.checkXYWithinImage(self.pixelXYToNpXY(end)): return
+        if not self.checkXYWithinImage(start): return
+        if not self.checkXYWithinImage(end): return
 
         points = tools.line.getPointListFromCoordinates(start, end)
 
@@ -368,7 +391,7 @@ class Editor(QMainWindow):
             pixel (tuple[int, int]): What pixel to color
         """
         image = Image.fromarray(self.projectData)
-        ImageDraw.floodfill(image, pixel, self.color)
+        ImageDraw.floodfill(image, pixel, tuple(self.color))
         self.projectData = np.array(image) 
 
     def colorPicker(self, pixel: tuple[int, int]) -> None:
@@ -379,6 +402,24 @@ class Editor(QMainWindow):
         """
         self.changeColor(self.projectData[self.pixelXYToNpXY(pixel)])
         self.changeTool(self.lastTool)
+
+    def colorPickerMove(self, event: QMouseEvent) -> None:
+        position = event.windowPos().x(), event.windowPos().y() - 23
+        arrayPosition = self.getPixelXYFromXY(position)
+
+        if self.checkXYWithinImage(arrayPosition):
+            arrayPosition = self.pixelXYToNpXY(arrayPosition)
+            color = tuple(self.projectData[arrayPosition])
+            self.toolLabel.show()
+        else:
+            self.toolLabel.hide()
+            return
+
+        qss = "background-color: rgb%;border: 2px solid black; border-radius: 16px;".replace("%", str(color))
+
+        labelPosition = position[0]+10, position[1]-10
+        self.toolLabel.setGeometry(*labelPosition, 32, 32)
+        self.toolLabel.setStyleSheet(qss)
 
     #!Native PyQt5 event functions
     def wheelEvent(self, event: QWheelEvent) -> None:
@@ -392,6 +433,7 @@ class Editor(QMainWindow):
         self.beforeLineState = np.copy(self.projectData)
         self.mouseDownPosition = event.pos().x(), event.pos().y()-23
         self.mouseMoveEvent(event)
+        self.toolLabel.hide()
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         super().mouseReleaseEvent(event)
@@ -402,8 +444,12 @@ class Editor(QMainWindow):
         pos = event.pos().x(), event.pos().y() - 23
         pixel = self.getPixelXYFromXY(pos)
 
-        self.tools[self.tool](pixel)
+        self.tools[self.tool][0](pixel)
         self.drawPixels()
+
+    def drawingBoardMoveEvent(self, event: QMouseEvent) -> None:
+        if self.tools[self.tool][1] is not None:
+            self.tools[self.tool][1](event)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)

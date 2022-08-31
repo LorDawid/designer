@@ -40,14 +40,22 @@ class NewProject(QWidget):
         self.fileLocationLayout.addWidget(self.fileLocationInput)
         self.fileLocationLayout.addWidget(self.fileLocationButton)
 
+        sizeRange = QIntValidator()
+        sizeRange.setRange(5, 500)
         self.sizeLayout = QHBoxLayout()
-        self.xSize = QLineEdit()
+        self.xSize = QLineEdit(text="0")
+        self.xSize.textChanged.connect(self.sizeChanged)
         self.xSize.setFixedHeight(40)
-        self.ySize = QLineEdit()
+        self.xSize.setValidator(sizeRange)
+        self.ySize = QLineEdit(text="0")
         self.ySize.setFixedHeight(40)
+        self.ySize.setValidator(sizeRange)
+        self.ySize.textChanged.connect(self.sizeChanged)
         self.sizeLayout.addWidget(self.xSize)
         self.sizeLayout.addWidget(QLabel(text="x"))
         self.sizeLayout.addWidget(self.ySize)
+
+        self.estSize = QLabel(text="Szacowany rozmiar: 0B", objectName="smallProjectSettingsHints")
 
         self.projectType = QComboBox()
         self.projectType.addItems(["Bransoletka"])
@@ -61,13 +69,14 @@ class NewProject(QWidget):
         self.finalLayout.addWidget(self.cancelButton)
         self.finalLayout.addWidget(self.saveButton)
 
-        self.mainLayout.addWidget(QLabel(text="Nazwa projektu", objectName="projectSettingsHints"))
+        self.mainLayout.addWidget(QLabel(text="Nazwa projektu"))
         self.mainLayout.addWidget(self.projectName)
-        self.mainLayout.addWidget(QLabel(text="Lokalizacja pliku", objectName="projectSettingsHints"))
+        self.mainLayout.addWidget(QLabel(text="Lokalizacja pliku"))
         self.mainLayout.addLayout(self.fileLocationLayout)
-        self.mainLayout.addWidget(QLabel(text="Rozmiar projektu", objectName="projectSettingsHints"))
+        self.mainLayout.addWidget(QLabel(text="Rozmiar projektu"))
         self.mainLayout.addLayout(self.sizeLayout)
-        self.mainLayout.addWidget(QLabel(text="Typ projektu", objectName="projectSettingsHints"))
+        self.mainLayout.addWidget(self.estSize)
+        self.mainLayout.addWidget(QLabel(text="Typ projektu"))
         self.mainLayout.addWidget(self.projectType)
         self.mainLayout.addLayout(self.finalLayout)
 
@@ -108,7 +117,7 @@ class NewProject(QWidget):
             self.errorMessage("Wybrany rozmiar nie jest liczbami", "Sprawdz, czy rozmiar zostal poprawnie wpisany")
             return
 
-        contents = np.zeros((size[0],size[1],3), dtype=np.uint8)
+        contents = np.ones((size[0],size[1],3), dtype=np.uint8)
 
         toWrite = {
             "version": extensionVersion,
@@ -138,3 +147,23 @@ class NewProject(QWidget):
     def projectNameChanged(self) -> None:
         name = self.projectName.text()
         self.fileLocationInput.setText(self.settings["defaultSaveLocation"]+self.toSafeFileName(name)+".dpct")
+
+    def sizeChanged(self) -> None:
+        try:
+            x = int(self.xSize.text())
+            y = int(self.ySize.text())
+        except Exception:
+            return
+
+        estimatedSize = (3*(x*y)+231)/1000
+        if estimatedSize > 1000:
+            estimatedSize /= 1000
+            estimatedSize = round(estimatedSize, 2)
+            estimatedSize = str(estimatedSize)
+            estimatedSize += "MB"
+        else:
+            estimatedSize = round(estimatedSize, 2)
+            estimatedSize = str(estimatedSize)
+            estimatedSize += "KB"
+
+        self.estSize.setText("Szacowany rozmiar pustego projektu: "+estimatedSize)

@@ -106,3 +106,7 @@ QToolButton::hover, QComboBox::hover, QLineEdit::hover, #chooseFileNewProjectBut
     border-top-right-radius: 0px;
     border-bottom-right-radius: 0px;
 }
+
+#smallProjectSettingsHints {
+    font-size: 15px;
+}
