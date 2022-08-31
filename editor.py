@@ -1,12 +1,13 @@
-from fileinput import filename
+from PIL import Image, ImageDraw
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PIL import Image
 import numpy as np
 import pickle
 import json
 import os
+
+import tools.line
 
 extensionVersion = "1.0"
 
@@ -61,6 +62,7 @@ class Editor(QMainWindow):
             "brush": self.brush,
             "line": self.line,
             "picker": self.colorPicker,
+            "bucket": self.bucket,
         }
 
         brushButton = QToolButton(text="Pedzel", clicked=lambda: self.changeTool("brush"))
@@ -87,6 +89,14 @@ class Editor(QMainWindow):
         pickerButton.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         self.toolsLayout.addWidget(pickerButton)
 
+        bucketButton = QToolButton(text="3", clicked=lambda: self.changeTool("bucket"))
+        bucketButton.setMaximumSize(80, 150)
+        bucketButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        bucketButton.setIcon(QIcon(f"icons/{self.settings['theme']}/bucket.png"))
+        bucketButton.setIconSize(QSize(48, 48))
+        bucketButton.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.toolsLayout.addWidget(bucketButton)
+
         colorButton = QToolButton(text="Kolor", clicked=lambda: self.changeColor())
         colorButton.setMaximumSize(80, 150)
         colorButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -100,7 +110,8 @@ class Editor(QMainWindow):
             "brush": brushButton,
             "line": lineButton,
             "picker": pickerButton,
-            "color": colorButton
+            "color": colorButton,
+            "bucket": bucketButton,
         }
 
         self.drawingBoard = QLabel()
@@ -342,14 +353,23 @@ class Editor(QMainWindow):
         if not self.checkXYWithinImage(self.pixelXYToNpXY(start)): return
         if not self.checkXYWithinImage(self.pixelXYToNpXY(end)): return
 
-        from tools.line import getPointListFromCoordinates
-        points = getPointListFromCoordinates(start, end)
+        points = tools.line.getPointListFromCoordinates(start, end)
 
         if self.mouseDown:
             self.projectData = np.copy(self.beforeLineState)
             for pixel in points:
                 self.projectData[self.pixelXYToNpXY(pixel)] = self.color
             self.drawPixels()
+
+    def bucket(self, pixel: tuple[int, int]) -> None:
+        """Bucket fills by converting data to image, filling it and converting back to data
+
+        Args:
+            pixel (tuple[int, int]): What pixel to color
+        """
+        image = Image.fromarray(self.projectData)
+        ImageDraw.floodfill(image, pixel, self.color)
+        self.projectData = np.array(image) 
 
     def colorPicker(self, pixel: tuple[int, int]) -> None:
         """Function used by color picker tool
