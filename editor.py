@@ -1,4 +1,3 @@
-from array import array
 from PIL import Image, ImageDraw
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
