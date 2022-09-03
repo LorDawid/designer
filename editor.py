@@ -360,9 +360,18 @@ class Editor(QMainWindow):
         Args:
             zoomAmount (float): How much to zoom
         """
-        self.zoom += zoomAmount/500
-        if self.zoom <= .1:
-            self.zoom -= zoomAmount/500
+        if zoomAmount > 0:
+            self.zoom *= 2
+        elif zoomAmount < 0:
+            self.zoom /= 2
+
+        if self.zoom < .5:
+            self.zoom = abs(self.zoom)
+            self.zoom *= 2
+
+        if self.zoom > 32:
+            self.zoom /= 2
+
         self.zoomIndicator.setText(str(round(self.zoom*100))+"%")
         self.drawPixels()
 
