@@ -58,6 +58,10 @@ class Editor(QMainWindow):
         self.mouseDownPosition = (0, 0)
         super().__init__()
 
+        #!
+        self.gridColor = (50, 50, 50)
+        self.gridHideRange = 8
+
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
         self.setWindowTitle("Edytor")
@@ -170,6 +174,8 @@ class Editor(QMainWindow):
         self.vAlignmentWidget = QWidget(self)
         self.vAlignmentWidget.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.vAlignmentWidget.setStyleSheet("background-color: none")
+        self.hAlignmentWidget.hide()
+        self.vAlignmentWidget.hide()
 
         self.mainLayout.addLayout(self.toolsLayout)
         self.mainLayout.addWidget(self.drawingBoardScroll)
@@ -180,7 +186,6 @@ class Editor(QMainWindow):
 
         self.resize(800, 600)
         self.show()
-        self.alignLabel()
 
     #!Other functions
     def errorMessage(self, text: str, informativeText: str) -> None:
@@ -208,6 +213,7 @@ class Editor(QMainWindow):
         with open("settings.json", "r") as file:
             self.settings = json.loads(file.read())
 
+    #!UI generation and management functions
     def refreshStyleSheet(self, widget: QWidget) -> None:
         """Refreshes stylesheet of specified widget"""
         widget.setStyleSheet(widget.styleSheet())
@@ -222,7 +228,6 @@ class Editor(QMainWindow):
                 else:
                     self.deleteLayoutContents(item.layout())
 
-    #!UI generation functions
     def refreshLastColors(self) -> None:
         self.deleteLayoutContents(self.lastColorsLayout)
         for index, color in enumerate(self.lastColors):
@@ -243,7 +248,7 @@ class Editor(QMainWindow):
 
         for _ in range(0, self.projectSize[0]+1):
             label = QLabel(self, objectName="grid")
-            label.setStyleSheet("background-color: gray")
+            label.setStyleSheet(f"background-color: rgb{self.gridColor}")
             label.setFixedWidth(1)
             self.hGridLayout.addWidget(label)
 
@@ -254,7 +259,7 @@ class Editor(QMainWindow):
 
         for _ in range(0, self.projectSize[1]+1):
             label = QLabel(self, objectName="grid")
-            label.setStyleSheet("background-color: gray")
+            label.setStyleSheet(f"background-color: rgb{self.gridColor}")
             label.setFixedHeight(1)
             self.vGridLayout.addWidget(label)
 
@@ -409,28 +414,6 @@ class Editor(QMainWindow):
         y = 0 <= pixel[1] < self.projectSize[1]
         return x and y 
 
-    def zoomImage(self, zoomAmount: float) -> None:
-        """Zooms the image by specified amount
-
-        Args:
-            zoomAmount (float): How much to zoom
-        """
-        if zoomAmount > 0:
-            self.zoom *= 2
-        elif zoomAmount < 0:
-            self.zoom /= 2
-
-        if self.zoom < .5:
-            self.zoom = abs(self.zoom)
-            self.zoom *= 2
-
-        if self.zoom > 32:
-            self.zoom /= 2
-
-        self.zoomIndicator.setText(str(round(self.zoom*100))+"%")
-        self.drawPixels()
-        self.alignLabel()
-
     #!Tool functions
     def changeColor(self, color: tuple[int,int,int] = None) -> None:
         """Changes tool color to specified value, if not specified, it will display color picker
@@ -528,10 +511,10 @@ class Editor(QMainWindow):
         self.toolLabel.setGeometry(*labelPosition, 32, 32)
         self.toolLabel.setStyleSheet(qss)
 
-    #!Native PyQt5 event functions
+    #!Event functions
     def wheelEvent(self, event: QWheelEvent) -> None:
         super().wheelEvent(event)
-        self.zoomImage(event.angleDelta().y())
+        self.zoomEvent(event.angleDelta().y())
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         super().mousePressEvent(event)
@@ -574,3 +557,32 @@ class Editor(QMainWindow):
 
     def closeEvent(self, event: QCloseEvent) -> None:
         super().closeEvent(event)
+
+    def zoomEvent(self, zoomAmount: float) -> None:
+        """Zooms the image by specified amount
+
+        Args:
+            zoomAmount (float): How much to zoom
+        """
+        if zoomAmount > 0:
+            self.zoom *= 2
+        elif zoomAmount < 0:
+            self.zoom /= 2
+
+        if self.zoom < .5:
+            self.zoom = abs(self.zoom)
+            self.zoom *= 2
+
+        if self.zoom > 32:
+            self.zoom /= 2
+
+        if self.zoom < self.gridHideRange:
+            self.hAlignmentWidget.hide()
+            self.vAlignmentWidget.hide()
+        else:
+            self.hAlignmentWidget.show()
+            self.vAlignmentWidget.show()
+
+        self.zoomIndicator.setText(str(round(self.zoom*100))+"%")
+        self.drawPixels()
+        self.alignLabel()
