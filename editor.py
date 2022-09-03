@@ -20,9 +20,16 @@ class TrackingScrollArea(QScrollArea):
         self.setParent(parent)
         self.setObjectName(objectName)
 
+        self.horizontalScrollBar().valueChanged.connect(self.scrollEvent)
+        self.verticalScrollBar().valueChanged.connect(self.scrollEvent)
+
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         self.mainWindow.drawingBoardMoveEvent(event)
         super().mouseMoveEvent(event)
+
+    def scrollEvent(self) -> None:
+        self.scrollValue = (self.horizontalScrollBar().value(), self.verticalScrollBar().value())
+        self.mainWindow.drawingBoardScrollEvent()
 
 class TrackingLabel(QLabel):
     def __init__(self, mainWindow):
@@ -47,6 +54,7 @@ class Editor(QMainWindow):
         self.tool = "brush"
         self.mouseDown = False
 
+        self.lastDrawingBoardGeometry = QRect(0, 0, 0, 0)
         self.mouseDownPosition = (0, 0)
         super().__init__()
 
@@ -156,14 +164,23 @@ class Editor(QMainWindow):
 
         self.toolLabel = QLabel(self, objectName="toolLabel")
 
+        self.hAlignmentWidget = QWidget(self)
+        self.hAlignmentWidget.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.hAlignmentWidget.setStyleSheet("background-color: none")
+        self.vAlignmentWidget = QWidget(self)
+        self.vAlignmentWidget.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.vAlignmentWidget.setStyleSheet("background-color: none")
+
         self.mainLayout.addLayout(self.toolsLayout)
         self.mainLayout.addWidget(self.drawingBoardScroll)
         self.mainLayout.setStretch(0, 1)
         self.mainLayout.setStretch(1, 3)
+        self.generateGrid()
         self.drawPixels()
 
         self.resize(800, 600)
         self.show()
+        self.alignLabel()
 
     #!Other functions
     def errorMessage(self, text: str, informativeText: str) -> None:
@@ -217,6 +234,44 @@ class Editor(QMainWindow):
             button.setMaximumSize(24, 24)
             button.clicked.connect(partial(self.changeColor, color=color))
             self.lastColorsLayout.addWidget(button, row, column)
+
+    def generateGrid(self) -> None:
+        self.hGridLayout = QHBoxLayout(self.hAlignmentWidget)
+        self.hGridLayout.setAlignment(Qt.AlignLeft)
+        self.hGridLayout.setContentsMargins(0,0,0,0)
+        self.hGridLayout.setSpacing(0)
+
+        for _ in range(0, self.projectSize[0]+1):
+            label = QLabel(self, objectName="grid")
+            label.setStyleSheet("background-color: gray")
+            label.setFixedWidth(1)
+            self.hGridLayout.addWidget(label)
+
+        self.vGridLayout = QVBoxLayout(self.vAlignmentWidget)
+        self.vGridLayout.setAlignment(Qt.AlignTop)
+        self.vGridLayout.setContentsMargins(0,0,0,0)
+        self.vGridLayout.setSpacing(0)
+
+        for _ in range(0, self.projectSize[1]+1):
+            label = QLabel(self, objectName="grid")
+            label.setStyleSheet("background-color: gray")
+            label.setFixedHeight(1)
+            self.vGridLayout.addWidget(label)
+
+    def alignLabel(self) -> None:
+        geometry = self.drawingBoard.geometry()
+
+        if self.lastDrawingBoardGeometry == geometry: return
+
+        hgeometry = (geometry.x()+8, geometry.y()+93, geometry.width()+1, geometry.height())
+        self.hAlignmentWidget.setGeometry(*hgeometry)
+        self.hGridLayout.setSpacing(self.zoom-1)
+
+        vgeometry = (geometry.x()+8, geometry.y()+93, geometry.width(), geometry.height()+1)
+        self.vAlignmentWidget.setGeometry(*vgeometry)
+        self.vGridLayout.setSpacing(self.zoom-1)
+
+        self.lastDrawingBoardGeometry = geometry
 
     #!Project management functions
     def loadProject(self, filePath: str) -> None:
@@ -374,6 +429,7 @@ class Editor(QMainWindow):
 
         self.zoomIndicator.setText(str(round(self.zoom*100))+"%")
         self.drawPixels()
+        self.alignLabel()
 
     #!Tool functions
     def changeColor(self, color: tuple[int,int,int] = None) -> None:
@@ -501,6 +557,14 @@ class Editor(QMainWindow):
     def drawingBoardMoveEvent(self, event: QMouseEvent) -> None:
         if self.tools[self.tool][1] is not None:
             self.tools[self.tool][1](event)
+        self.alignLabel()
+
+    def drawingBoardScrollEvent(self) -> None:
+        self.alignLabel()
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self.alignLabel()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)

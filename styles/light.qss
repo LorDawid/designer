@@ -95,7 +95,6 @@ QToolButton::hover, QComboBox::hover, QLineEdit::hover, #chooseFileNewProjectBut
     font-size: 12px;
 }
 
-
 #drawingSpace {
     background: rgb(240, 240, 240);
     border-radius: 15px;
