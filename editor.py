@@ -23,9 +23,17 @@ class TrackingScrollArea(QScrollArea):
         self.horizontalScrollBar().valueChanged.connect(self.scrollEvent)
         self.verticalScrollBar().valueChanged.connect(self.scrollEvent)
 
+        self.setMouseTracking(True)
+        self.setWidgetResizable(True)
+        self.setAlignment(Qt.AlignCenter)
+        self.setCursor(QCursor(Qt.CrossCursor))
+
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         self.mainWindow.drawingBoardMoveEvent(event)
         super().mouseMoveEvent(event)
+
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        event.ignore()
 
     def scrollEvent(self) -> None:
         self.scrollValue = (self.horizontalScrollBar().value(), self.verticalScrollBar().value())
@@ -45,6 +53,16 @@ class Divider(QLabel):
         super().__init__()
         self.setFixedWidth(2)
         self.setObjectName("divider")
+
+class ToolChangeButton(QToolButton):
+    def __init__(self, window, name) -> None:
+        super().__init__()
+
+        self.clicked.connect(lambda: self.changeTool(name))
+        self.setMaximumSize(48, 48)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setIcon(QIcon(f"icons/{window.settings['theme']}/{name}.png"))
+        self.setIconSize(QSize(32, 32))
 
 class Editor(QMainWindow):
     def __init__(self, filepath: str) -> None:
@@ -106,32 +124,16 @@ class Editor(QMainWindow):
             "bucket": [self.bucket, None],
         }
 
-        brushButton = QToolButton(clicked=lambda: self.changeTool("brush"))
-        brushButton.setMaximumSize(48, 48)
-        brushButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        brushButton.setIcon(QIcon(f"icons/{self.settings['theme']}/brush.png"))
-        brushButton.setIconSize(QSize(32, 32))
+        brushButton = ToolChangeButton("brush")
         self.toolsLayout.addWidget(brushButton)
 
-        lineButton = QToolButton(clicked=lambda: self.changeTool("line"))
-        lineButton.setMaximumSize(48, 48)
-        lineButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        lineButton.setIcon(QIcon(f"icons/{self.settings['theme']}/line.png"))
-        lineButton.setIconSize(QSize(32, 32))
+        lineButton = ToolChangeButton("line")
         self.toolsLayout.addWidget(lineButton)
 
-        pickerButton = QToolButton(clicked=lambda: self.changeTool("picker"))
-        pickerButton.setMaximumSize(48, 48)
-        pickerButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        pickerButton.setIcon(QIcon(f"icons/{self.settings['theme']}/picker.png"))
-        pickerButton.setIconSize(QSize(32, 32))
+        pickerButton = ToolChangeButton("picker")
         self.toolsLayout.addWidget(pickerButton)
 
-        bucketButton = QToolButton(clicked=lambda: self.changeTool("bucket"))
-        bucketButton.setMaximumSize(48, 48)
-        bucketButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        bucketButton.setIcon(QIcon(f"icons/{self.settings['theme']}/bucket.png"))
-        bucketButton.setIconSize(QSize(32, 32))
+        bucketButton = ToolChangeButton(self, "bucket")
         self.toolsLayout.addWidget(bucketButton)
 
         self.toolsLayout.addWidget(Divider())
@@ -139,8 +141,8 @@ class Editor(QMainWindow):
         qss = "border: 2px solid lightgray;border-radius: 24px;background-color:rgb%".replace("%", str(tuple(self.color)))
         colorButton = QToolButton(clicked=lambda: self.changeColor())
         colorButton.setMaximumSize(48, 48)
-        colorButton.setStyleSheet(qss)
         colorButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        colorButton.setStyleSheet(qss)
         self.toolsLayout.addWidget(colorButton)
 
         self.lastColorsLayout = QGridLayout()
@@ -160,11 +162,7 @@ class Editor(QMainWindow):
         self.drawingBoard = TrackingLabel(self)
         self.drawingBoard.setMouseTracking(True)
         self.drawingBoardScroll = TrackingScrollArea(self, self.mainWidget, objectName="drawingSpace")
-        self.drawingBoardScroll.setMouseTracking(True)
-        self.drawingBoardScroll.setWidgetResizable(True)
         self.drawingBoardScroll.setWidget(self.drawingBoard)
-        self.drawingBoardScroll.setAlignment(Qt.AlignCenter)
-        self.drawingBoardScroll.setCursor(QCursor(Qt.CrossCursor))
 
         self.toolLabel = QLabel(self, objectName="toolLabel")
 
