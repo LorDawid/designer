@@ -124,13 +124,13 @@ class Editor(QMainWindow):
             "bucket": [self.bucket, None],
         }
 
-        brushButton = ToolChangeButton("brush")
+        brushButton = ToolChangeButton(self, "brush")
         self.toolsLayout.addWidget(brushButton)
 
-        lineButton = ToolChangeButton("line")
+        lineButton = ToolChangeButton(self, "line")
         self.toolsLayout.addWidget(lineButton)
 
-        pickerButton = ToolChangeButton("picker")
+        pickerButton = ToolChangeButton(self, "picker")
         self.toolsLayout.addWidget(pickerButton)
 
         bucketButton = ToolChangeButton(self, "bucket")
