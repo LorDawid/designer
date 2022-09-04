@@ -3,7 +3,7 @@ from functools import partial
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from math import floor
+from math import floor, ceil
 import numpy as np
 import pickle
 import json
@@ -181,11 +181,14 @@ class Editor(QMainWindow):
         self.hAlignmentWidget = QWidget(self)
         self.hAlignmentWidget.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.hAlignmentWidget.setStyleSheet("background-color: none")
+        self.hAlignmentWidget.hide()
+        self.hAlignmentEven = self.projectSize[0] % 2 == 0
+
         self.vAlignmentWidget = QWidget(self)
         self.vAlignmentWidget.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.vAlignmentWidget.setStyleSheet("background-color: none")
-        self.hAlignmentWidget.hide()
         self.vAlignmentWidget.hide()
+        self.vAlignmentEven = self.projectSize[1] % 2 == 0
 
         self.mainLayout.addLayout(self.toolsLayout)
         self.mainLayout.addWidget(self.drawingBoardScroll)
@@ -256,22 +259,28 @@ class Editor(QMainWindow):
         self.hGridLayout.setContentsMargins(0,0,0,0)
         self.hGridLayout.setSpacing(0)
 
-        for _ in range(0, self.projectSize[0]+1):
+        for n in range(0, self.projectSize[0]+1):
             label = QLabel(self, objectName="grid")
             label.setStyleSheet(f"background-color: rgb{self.gridColor}")
             label.setFixedWidth(1)
             self.hGridLayout.addWidget(label)
+
+            if n in [ceil(self.projectSize[0]/2), floor(self.projectSize[0]/2)]:
+                label.setStyleSheet(f"background-color: red")
 
         self.vGridLayout = QVBoxLayout(self.vAlignmentWidget)
         self.vGridLayout.setAlignment(Qt.AlignTop)
         self.vGridLayout.setContentsMargins(0,0,0,0)
         self.vGridLayout.setSpacing(0)
 
-        for _ in range(0, self.projectSize[1]+1):
+        for n in range(0, self.projectSize[1]+1):
             label = QLabel(self, objectName="grid")
             label.setStyleSheet(f"background-color: rgb{self.gridColor}")
             label.setFixedHeight(1)
             self.vGridLayout.addWidget(label)
+
+            if n in [ceil(self.projectSize[1]/2), floor(self.projectSize[1]/2)]:
+                label.setStyleSheet(f"background-color: red")
 
     def alignLabel(self) -> None:
         geometry = self.drawingBoard.geometry()
