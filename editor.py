@@ -521,8 +521,6 @@ class Editor(QMainWindow):
         ImageDraw.floodfill(image, pixel, tuple(self.color))
         self.projectData = np.array(image, np.uint8).reshape(*self.projectSize, 3)
 
-        print(self.projectData)
-
     def colorPicker(self, pixel: tuple[int, int]) -> None:
         """Function used by color picker tool
 
