@@ -52,10 +52,11 @@ class TrackingLabel(QLabel):
         super().mouseMoveEvent(event)
 
 class ToolChangeButton(QToolButton):
-    def __init__(self, window, name) -> None:
+    def __init__(self, window, name: str, connect = None) -> None:
         super().__init__()
 
-        self.clicked.connect(lambda: window.changeTool(name))
+        if connect is None: self.clicked.connect(lambda: window.changeTool(name))
+        else: self.clicked.connect(connect)
         self.setMaximumSize(48, 48)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setIcon(QIcon(f"icons/{window.settings['theme']}/{name}.png"))
@@ -127,6 +128,14 @@ class Editor(QMainWindow):
             "picker": [self.colorPicker, self.colorPickerMove],
             "bucket": [self.bucket, None],
         }
+
+        undoButton = ToolChangeButton(self, "undo", self.undo)
+        self.toolsLayout.addWidget(undoButton)
+
+        redoButton = ToolChangeButton(self, "redo", self.redo)
+        self.toolsLayout.addWidget(redoButton)
+
+        self.toolsLayout.addWidget(Divider())
 
         brushButton = ToolChangeButton(self, "brush")
         self.toolsLayout.addWidget(brushButton)
@@ -565,7 +574,6 @@ class Editor(QMainWindow):
         if len(self.undoHistory) > self.undoLength:
             self.undoHistory = self.undoHistory[1:]
 
-        if len(self.undoHistory) == 0: return
         if not (self.undoHistory[-1]==self.projectData).all():
             self.redoHistory = []
 
@@ -631,7 +639,7 @@ class Editor(QMainWindow):
             self.zoom = abs(self.zoom)
             self.zoom *= 2
 
-        if self.zoom > 32:
+        if self.zoom > 64:
             self.zoom /= 2
 
         if self.zoom < self.gridHideRange:

@@ -117,7 +117,7 @@ class NewProject(QWidget):
             self.errorMessage("Wybrany rozmiar nie jest liczbami", "Sprawdz, czy rozmiar zostal poprawnie wpisany")
             return
 
-        contents = np.ones((size[0],size[1],3), dtype=np.uint8)
+        contents = np.full((size[0],size[1],3), fill_value=self.settings["defaultColor"], dtype=np.uint8)
 
         toWrite = {
             "version": extensionVersion,
