@@ -514,8 +514,14 @@ class Editor(QMainWindow):
             pixel (tuple[int, int]): What pixel to color
         """
         image = Image.fromarray(self.projectData)
+
+        if image.size == self.projectSize[::-1]:
+            image = Image.fromarray(self.projectData.reshape(*self.projectSize[::-1], 3))
+
         ImageDraw.floodfill(image, pixel, tuple(self.color))
-        self.projectData = np.array(image) 
+        self.projectData = np.array(image, np.uint8).reshape(*self.projectSize, 3)
+
+        print(self.projectData)
 
     def colorPicker(self, pixel: tuple[int, int]) -> None:
         """Function used by color picker tool
