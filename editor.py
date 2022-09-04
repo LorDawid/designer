@@ -3,6 +3,7 @@ from functools import partial
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from math import floor
 import numpy as np
 import pickle
 import json
@@ -374,7 +375,7 @@ class Editor(QMainWindow):
         if type(coordinates) == QPoint: mousePos = coordinates.x(), coordinates.y()
         else: mousePos = coordinates
         labelPos = mousePos[0]-imageStartPos[0], mousePos[1]-imageStartPos[1]
-        pixel = round(labelPos[0]/self.zoom), round(labelPos[1]/self.zoom)
+        pixel = floor(labelPos[0]/self.zoom), floor(labelPos[1]/self.zoom)
         return pixel
 
     def pixelXYToNpXY(self, pixel: tuple[int, int]) -> tuple[int, int]:
