@@ -1,3 +1,4 @@
+from tkinter.filedialog import SaveFileDialog
 from PIL import Image, ImageDraw
 from functools import partial
 from PyQt5.QtWidgets import *
@@ -110,6 +111,10 @@ class Editor(QMainWindow):
         self.projectSettings.addAction(QAction("Wyeksportuj projekt", self, triggered=self.exportProject, shortcut="Ctrl+E"))
         self.menu.addMenu(self.projectSettings)
 
+        self.saveTimer = QTimer()
+        self.saveTimer.timeout.connect(self.autoSaveProject)
+        self.saveTimer.setInterval(60000)
+        self.saveTimer.start()
 
         self.mainLayout = QVBoxLayout(self.mainWidget)
 
@@ -333,6 +338,11 @@ class Editor(QMainWindow):
             self.errorMessage("Nie mozna zapisac pliku", "Nieznany problem, sprobuj ponownie")
 
         self.statusBar().showMessage(f"Zapisano projekt w {filePath}")
+
+    def autoSaveProject(self) -> None:
+        filepath = "".join(self.filepath.split(".")[:-1])+"_autosave.dpct"
+        self.saveProject(filepath)
+        self.statusBar().showMessage(f"Automatycznie zapisano plik w {filepath}")
 
     def updateRecentProjects(self) -> None:
         """Updates recent project list with current project
@@ -585,6 +595,21 @@ class Editor(QMainWindow):
         if event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_Y and (not self.mouseDown): self.redo()
 
     def closeEvent(self, event: QCloseEvent) -> None:
+        saveDialogue = QMessageBox()
+        saveDialogue.setWindowTitle(" ")
+        saveDialogue.setText("Projekt mogl byc zedytowany")
+        saveDialogue.setInformativeText("Czy chcesz zapisac swoje zmiany?")
+        saveDialogue.setStandardButtons(QMessageBox.Save|QMessageBox.Discard|QMessageBox.Cancel)
+        saveDialogue.setDefaultButton(QMessageBox.Save)
+        userChoice = saveDialogue.exec_()
+        saveDialogue.deleteLater()
+
+        if userChoice == QMessageBox.Save:
+            self.saveProject(self.filepath)
+        elif userChoice == QMessageBox.Cancel:
+            event.ignore()
+            return
+
         super().closeEvent(event)
 
     def zoomEvent(self, zoomAmount: float) -> None:
