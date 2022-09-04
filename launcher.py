@@ -61,6 +61,21 @@ class Launcher(QWidget):
         self.options.addWidget(self.newProjectButton)
         self.options.addWidget(self.openProjectButton)
         self.options.addWidget(self.settingsButton)
+        self.options.addItem(QSpacerItem(2, 2, QSizePolicy.Expanding, QSizePolicy.Expanding))
+
+        githubButton = QToolButton(text="  Github | LorDawid")
+        githubButton.setIcon(QIcon(f"icons/{self.settings['theme']}/github.png"))
+        githubButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        githubButton.setStyleSheet("border: none; font-size: 13px;")
+        githubButton.clicked.connect(lambda: QDesktopServices.openUrl(QUrl("https://www.github.com/LorDawid/designer")))
+        self.options.addWidget(githubButton)
+
+        freepikButton = QToolButton(text="  Icons from Freepik")
+        freepikButton.setIcon(QIcon(f"icons/{self.settings['theme']}/freepik.png"))
+        freepikButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        freepikButton.setStyleSheet("border: none; font-size: 13px;")
+        freepikButton.clicked.connect(lambda: QDesktopServices.openUrl(QUrl("https://www.freepik.com/")))
+        self.options.addWidget(freepikButton)
 
         self.recentsLayout = QVBoxLayout()
         self.recentsLayout.setAlignment(Qt.AlignTop)

@@ -1,4 +1,3 @@
-from tkinter.filedialog import SaveFileDialog
 from PIL import Image, ImageDraw
 from functools import partial
 from PyQt5.QtWidgets import *
