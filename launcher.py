@@ -8,6 +8,7 @@ import sys
 import os
 
 from newproject import NewProject
+from settings import Settings
 
 class Launcher(QWidget):
     PROJECTTYPES = {
@@ -20,6 +21,8 @@ class Launcher(QWidget):
         self.setWindowIcon(QIcon("icons/designer.png"))
         self.setWindowTitle("Projektant")
 
+        self.settingsWindow = Settings()
+        self.settingsWindow.show()
 
         self.refreshSettings()
         self.loadStyleSheet(self.settings['theme'])

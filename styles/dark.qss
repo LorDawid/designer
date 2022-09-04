@@ -33,6 +33,54 @@ QToolButton::hover, QComboBox::hover, QLineEdit::hover, #chooseFileNewProjectBut
     background-color: rgb(30, 30, 30)
 }
 
+QCheckBox::indicator {
+    border: 2px solid lightgray;
+    width: 30px;
+    height: 30px;
+    border-radius: 15px;
+}
+
+QCheckBox::indicator:checked {
+    image: url(icons/dark/checkmark.png);
+    background: rgb(66, 141, 245);
+    border: 2px solid lightgray;
+    width: 30px;
+    height: 30px;
+    border-radius: 15px;
+}
+
+QSpinBox {
+    border: 2px solid lightgray;
+    border-radius: 15px;
+    padding: 0 10px;
+}
+
+QSpinBox::up-arrow {
+    image: url(./icons/dark/up.png);
+    width: 10px;
+    height: 10px;
+    padding-right: 5px;
+}
+
+QSpinBox::down-arrow {
+    image: url(./icons/dark/down.png);
+    width: 10px;
+    height: 10px;
+    padding-right: 5px;
+}
+
+QSpinBox::up-button {
+    border-left: 2px solid lightgray;
+    border-bottom: 1px solid lightgray;
+    border-top-right-radius: 15px;
+}
+
+QSpinBox::down-button {
+    border-left: 2px solid lightgray;
+    border-top: 1px solid lightgray;
+    border-bottom-right-radius: 15px;
+}
+
 QScrollBar:horizontal {
 	background: rgb(30, 30, 30);
     height: 20px;
@@ -110,10 +158,6 @@ QScrollBar::handle:vertical {
     font-size: 15px;
 }
 
-#reallySmallLabel {
-    font-size: 12px;
-}
-
 #drawingSpace {
     background: rgb(30, 30, 30);
     border-radius: 15px;
@@ -133,4 +177,8 @@ QScrollBar::handle:vertical {
     border-radius: 15px;
     border-top-right-radius: 0px;
     border-bottom-right-radius: 0px;
+}
+
+#noBorder {
+    border: none;
 }

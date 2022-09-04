@@ -1,4 +1,8 @@
 {
-    "defaultSaveLocation": "C:\\Users\\szost\\Desktop\\",
-    "theme": "light"
+    "theme": "light",
+    "gridEnabled": true,
+    "gridColor": [50, 50, 50],
+    "gridVisibility": 400,
+    "defaultColor": [255, 255, 255],
+    "defaultSaveLocation": "C:\\Users\\szost\\Desktop\\"
 }

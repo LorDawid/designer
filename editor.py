@@ -8,6 +8,7 @@ import pickle
 import json
 import os
 
+from customWidgets import *
 import tools.line
 
 extensionVersion = "1.0"
@@ -47,12 +48,6 @@ class TrackingLabel(QLabel):
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         self.mainWindow.drawingBoardMoveEvent(event)
         super().mouseMoveEvent(event)
-
-class Divider(QLabel):
-    def __init__(self):
-        super().__init__()
-        self.setFixedWidth(2)
-        self.setObjectName("divider")
 
 class ToolChangeButton(QToolButton):
     def __init__(self, window, name) -> None:
