@@ -53,7 +53,7 @@ class ToolChangeButton(QToolButton):
     def __init__(self, window, name) -> None:
         super().__init__()
 
-        self.clicked.connect(lambda: self.changeTool(name))
+        self.clicked.connect(lambda: window.changeTool(name))
         self.setMaximumSize(48, 48)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setIcon(QIcon(f"icons/{window.settings['theme']}/{name}.png"))
@@ -66,6 +66,9 @@ class Editor(QMainWindow):
         self.color = (0, 0, 0)
         self.tool = "brush"
         self.mouseDown = False
+        self.undoHistory = []
+        self.redoHistory = []
+        self.undoLength = 20
 
         self.lastDrawingBoardGeometry = QRect(0, 0, 0, 0)
         self.mouseDownPosition = (0, 0)
@@ -407,6 +410,32 @@ class Editor(QMainWindow):
         y = 0 <= pixel[1] < self.projectSize[1]
         return x and y 
 
+    def undo(self) -> None:
+        if len(self.undoHistory) != 0:
+            self.redoHistory.append(np.copy(self.projectData))
+            self.projectData = self.undoHistory[-1]
+            self.undoHistory = self.undoHistory[:-1]
+            self.statusBar().showMessage("Cofnieto (Ctrl+Y aby ponowic)")
+        else:
+            self.statusBar().showMessage("Nie mozna cofnac - historia pusta")
+
+        self.drawPixels()
+
+    def redo(self) -> None:
+        if len(self.redoHistory) != 0:
+            self.undoHistory.append(np.copy(self.projectData))
+            self.projectData = self.redoHistory[-1]
+            self.redoHistory = self.redoHistory[:-1]
+            self.statusBar().showMessage("Ponowiono (Ctrl+Z aby cofnac)")
+            self.drawPixels()
+        else:
+            self.statusBar().showMessage("Nie mozna ponowic - historia pusta")
+
+        if len(self.undoHistory) > self.undoLength:
+            self.undoHistory = self.undoHistory[1:]
+
+        self.drawPixels()
+
     #!Tool functions
     def changeColor(self, color: tuple[int,int,int] = None) -> None:
         """Changes tool color to specified value, if not specified, it will display color picker
@@ -512,11 +541,18 @@ class Editor(QMainWindow):
     def mousePressEvent(self, event: QMouseEvent) -> None:
         super().mousePressEvent(event)
         self.mouseDown = True
-        self.lastState = np.copy(self.projectData)
-        self.beforeLineState = np.copy(self.projectData)
         self.mouseDownPosition = event.pos().x(), event.pos().y()-23
+        self.undoHistory.append(np.copy(self.projectData))
+        self.beforeLineState = np.copy(self.projectData)
         self.mouseMoveEvent(event)
         self.toolLabel.hide()
+
+        if len(self.undoHistory) > self.undoLength:
+            self.undoHistory = self.undoHistory[1:]
+
+        if len(self.undoHistory) == 0: return
+        if not (self.undoHistory[-1]==self.projectData).all():
+            self.redoHistory = []
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         super().mouseReleaseEvent(event)
@@ -544,9 +580,8 @@ class Editor(QMainWindow):
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         super().keyPressEvent(event)
-        if event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_Z and (not self.mouseDown):
-            self.projectData = np.copy(self.lastState)
-            self.drawPixels()
+        if event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_Z and (not self.mouseDown): self.undo()
+        if event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_Y and (not self.mouseDown): self.redo()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         super().closeEvent(event)

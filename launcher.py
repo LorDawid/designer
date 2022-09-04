@@ -22,7 +22,6 @@ class Launcher(QWidget):
         self.setWindowTitle("Projektant")
 
         self.settingsWindow = Settings()
-        self.settingsWindow.show()
 
         self.refreshSettings()
         self.loadStyleSheet(self.settings['theme'])
