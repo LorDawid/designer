@@ -63,6 +63,7 @@ class ToolChangeButton(QToolButton):
 
 class Editor(QMainWindow):
     def __init__(self, filepath: str) -> None:
+        self.xj = 0
         self.zoom = 1
         self.lastColors = [(255,255,255) for _ in range(0, 8)]
         self.color = (0, 0, 0)
@@ -243,6 +244,10 @@ class Editor(QMainWindow):
         """Loads settings from settings.json"""
         with open("settings.json", "r") as file:
             self.settings = json.loads(file.read())
+
+    def log(self) -> None:
+        '''Used for debuggging'''
+        return
 
     #!UI generation and management functions
     def refreshStyleSheet(self, widget: QWidget) -> None:
@@ -652,6 +657,8 @@ class Editor(QMainWindow):
         super().keyPressEvent(event)
         if event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_Z and (not self.mouseDown): self.undo()
         if event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_Y and (not self.mouseDown): self.redo()
+        if event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_L and (not self.mouseDown):
+            self.log()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         saveDialogue = QMessageBox()
