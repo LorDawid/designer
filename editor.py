@@ -182,13 +182,20 @@ class Editor(QMainWindow):
         self.hAlignmentWidget.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.hAlignmentWidget.setStyleSheet("background-color: none")
         self.hAlignmentWidget.hide()
-        self.hAlignmentEven = self.projectSize[0] % 2 == 0
+        self.hGridLines = [floor(self.projectSize[0]/2), ceil(self.projectSize[0]/2)]
+        self.hSymmetry = True
 
         self.vAlignmentWidget = QWidget(self)
         self.vAlignmentWidget.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.vAlignmentWidget.setStyleSheet("background-color: none")
         self.vAlignmentWidget.hide()
-        self.vAlignmentEven = self.projectSize[1] % 2 == 0
+        self.vGridLines = [floor(self.projectSize[1]/2), ceil(self.projectSize[1]/2)]
+        self.vSymmetry = True
+
+        print("UpperRect:", QRect(0, 0, self.projectSize[0], self.vGridLines[0]))
+        print("LowerRect:", QRect(0, self.vGridLines[1], *self.projectSize))
+        print("LRect:", QRect(0, 0, self.hGridLines[0], self.projectSize[1]))
+        print("RRect:", QRect(self.hGridLines[0], 0, *self.projectSize))
 
         self.mainLayout.addLayout(self.toolsLayout)
         self.mainLayout.addWidget(self.drawingBoardScroll)
@@ -493,6 +500,27 @@ class Editor(QMainWindow):
         self.toolButtons[self.tool].setObjectName("activeButton")
         self.refreshStyleSheet(self.toolButtons[self.tool])
 
+    def paintPixel(self, pixel: tuple[int, int]) -> None:
+        if not self.checkXYWithinImage(pixel): return
+        for pixel in self.symmetrize(pixel):
+            pixel = self.pixelXYToNpXY(pixel)
+            self.projectData[pixel] = self.color
+
+    def paintPixels(self, pixels: list) -> None:
+        for pixel in pixels:
+            self.paintPixel(pixel)
+
+    def symmetrize(self, pixel: tuple[int, int]) -> list:
+        pixelList = [pixel]
+        if self.vSymmetry:
+            pixelList.append((pixel[0], (self.projectSize[1] - 1 - pixel[1])))
+
+        if self.hSymmetry:
+            pixelList.append(((self.projectSize[0] - 1 - pixel[0]), pixel[1]))
+            pixelList.append(((self.projectSize[0] - 1 - pixel[0]), (self.projectSize[1] - 1 - pixel[1])))
+
+        return pixelList
+
     def brush(self, pixel: tuple[int, int]) -> None:
         """Function used by brush
 
@@ -500,8 +528,7 @@ class Editor(QMainWindow):
             pixel (tuple[int, int]): Takes pixel that will become colored
         """
         if not self.checkXYWithinImage(pixel): return
-        pixel = self.pixelXYToNpXY(pixel)
-        self.projectData[pixel] = self.color
+        self.paintPixel(pixel)
         self.drawPixels()
 
     def line(self, end: tuple[int, int]) -> None:
@@ -520,8 +547,7 @@ class Editor(QMainWindow):
 
         if self.mouseDown:
             self.projectData = np.copy(self.beforeLineState)
-            for pixel in points:
-                self.projectData[self.pixelXYToNpXY(pixel)] = self.color
+            self.paintPixels(points)
             self.drawPixels()
 
     def bucket(self, pixel: tuple[int, int]) -> None:
