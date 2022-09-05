@@ -163,6 +163,22 @@ class Editor(QMainWindow):
 
         self.toolsLayout.addWidget(Divider())
 
+        def switchHSym(): 
+            self.hSymmetry = not self.hSymmetry
+            if self.hSymmetry: hAlignmentButton.setObjectName("activeButton")
+            else: hAlignmentButton.setObjectName("")
+            self.refreshStyleSheet(hAlignmentButton)
+        hAlignmentButton = ToolChangeButton(self, "hSymmetry", switchHSym)
+        self.toolsLayout.addWidget(hAlignmentButton)
+
+        def switchVSym(): 
+            self.vSymmetry = not self.vSymmetry
+            if self.vSymmetry: vAlignmentButton.setObjectName("activeButton")
+            else: vAlignmentButton.setObjectName("")
+            self.refreshStyleSheet(vAlignmentButton)
+        vAlignmentButton = ToolChangeButton(self, "vSymmetry", switchVSym)
+        self.toolsLayout.addWidget(vAlignmentButton)
+
         self.toolButtons = {
             "brush": brushButton,
             "line": lineButton,
@@ -183,19 +199,14 @@ class Editor(QMainWindow):
         self.hAlignmentWidget.setStyleSheet("background-color: none")
         self.hAlignmentWidget.hide()
         self.hGridLines = [floor(self.projectSize[0]/2), ceil(self.projectSize[0]/2)]
-        self.hSymmetry = True
+        self.hSymmetry = False
 
         self.vAlignmentWidget = QWidget(self)
         self.vAlignmentWidget.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.vAlignmentWidget.setStyleSheet("background-color: none")
         self.vAlignmentWidget.hide()
         self.vGridLines = [floor(self.projectSize[1]/2), ceil(self.projectSize[1]/2)]
-        self.vSymmetry = True
-
-        print("UpperRect:", QRect(0, 0, self.projectSize[0], self.vGridLines[0]))
-        print("LowerRect:", QRect(0, self.vGridLines[1], *self.projectSize))
-        print("LRect:", QRect(0, 0, self.hGridLines[0], self.projectSize[1]))
-        print("RRect:", QRect(self.hGridLines[0], 0, *self.projectSize))
+        self.vSymmetry = False
 
         self.mainLayout.addLayout(self.toolsLayout)
         self.mainLayout.addWidget(self.drawingBoardScroll)
@@ -517,6 +528,8 @@ class Editor(QMainWindow):
 
         if self.hSymmetry:
             pixelList.append(((self.projectSize[0] - 1 - pixel[0]), pixel[1]))
+
+        if self.vSymmetry and self.hSymmetry:
             pixelList.append(((self.projectSize[0] - 1 - pixel[0]), (self.projectSize[1] - 1 - pixel[1])))
 
         return pixelList
