@@ -192,8 +192,6 @@ class Editor(QMainWindow):
         self.drawingBoardScroll = TrackingScrollArea(self, self.mainWidget, objectName="drawingSpace")
         self.drawingBoardScroll.setWidget(self.drawingBoard)
 
-        self.toolLabel = QLabel(self, objectName="toolLabel")
-
         self.hAlignmentWidget = QWidget(self)
         self.hAlignmentWidget.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.hAlignmentWidget.setStyleSheet("background-color: none")
@@ -207,6 +205,8 @@ class Editor(QMainWindow):
         self.vAlignmentWidget.hide()
         self.vGridLines = [floor(self.projectSize[1]/2), ceil(self.projectSize[1]/2)]
         self.vSymmetry = False
+
+        self.toolLabel = QLabel(self, objectName="toolLabel")
 
         self.mainLayout.addLayout(self.toolsLayout)
         self.mainLayout.addWidget(self.drawingBoardScroll)
@@ -698,4 +698,5 @@ class Editor(QMainWindow):
 
         self.zoomIndicator.setText(str(round(self.zoom*100))+"%")
         self.drawPixels()
+        QApplication.processEvents()
         self.alignLabel()
