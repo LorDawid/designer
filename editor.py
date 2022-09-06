@@ -90,8 +90,17 @@ class Editor(QMainWindow):
         self.filepath = filepath
         self.loadProject(self.filepath)
 
-        sizeMessage = QLabel(text = f"  Rozmiar: {self.projectSize[0]} x {self.projectSize[1]}  ", objectName="smallLabel")
+        sizeMessage = QToolButton(text = f"  {self.projectSize[0]} x {self.projectSize[1]}  ", objectName="smallLabel")
+        sizeMessage.setIcon(QIcon(f"icons/{self.settings['theme']}/size.png"))
+        sizeMessage.setIconSize(QSize(12, 12))
+        sizeMessage.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.statusBar().addPermanentWidget(sizeMessage)
+
+        self.mouseMessage = QToolButton(text = f"  {self.projectSize[0]} x {self.projectSize[1]}  ", objectName="smallLabel")
+        self.mouseMessage.setIcon(QIcon(f"icons/{self.settings['theme']}/move.png"))
+        self.mouseMessage.setIconSize(QSize(12, 12))
+        self.mouseMessage.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.statusBar().addPermanentWidget(self.mouseMessage)
 
         self.zoomIndicator = QLabel(text=f"{self.zoom*100}%", objectName="smallLabel")
         self.statusBar().addPermanentWidget(self.zoomIndicator)
@@ -638,6 +647,8 @@ class Editor(QMainWindow):
         pos = event.pos().x(), event.pos().y() - 23
         pixel = self.getPixelXYFromXY(pos)
 
+        self.mouseMessage.setText(str(pixel))
+
         self.tools[self.tool][0](pixel)
         self.drawPixels()
 
@@ -645,6 +656,11 @@ class Editor(QMainWindow):
         if self.tools[self.tool][1] is not None:
             self.tools[self.tool][1](event)
         self.alignLabel()
+
+        pixel = self.getPixelXYFromXY((event.pos().x(), event.pos().y() - 23))
+        pixel = [str(x) for x in pixel]
+
+        self.mouseMessage.setText("  "+", ".join(pixel))
 
     def drawingBoardScrollEvent(self) -> None:
         self.alignLabel()

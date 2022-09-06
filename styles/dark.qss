@@ -154,8 +154,15 @@ QScrollBar::handle:vertical {
 }
 
 #smallLabel, QMenu, QMenuBar, QStatusBar {
+    padding: none;
+    margin: none;
+    border: none;
     font-weight: 400;
     font-size: 15px;
+}
+
+#smallLabel::hover {
+    background-color: none;
 }
 
 #drawingSpace {
