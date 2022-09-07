@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from math import floor, ceil
-import numpy as np
 import pickle
 import json
 import os
@@ -12,7 +11,7 @@ import os
 from customWidgets import *
 import tools.line
 
-extensionVersion = "1.0"
+extensionVersion = "2.0"
 
 #Those two classes exists to be able to track mouse movement when not pressed
 class TrackingScrollArea(QScrollArea):
@@ -45,10 +44,77 @@ class TrackingLabel(QLabel):
     def __init__(self, mainWindow):
         super().__init__()
         self.mainWindow = mainWindow
+        self.pen = QPen()
+        self.zoom = 1
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         self.mainWindow.drawingBoardMoveEvent(event)
         super().mouseMoveEvent(event)
+
+    def scalePixel(self, pixel: tuple[int, int]) -> tuple[int, int]:
+        return pixel[0] * self.zoom + self.zoom//2, pixel[1] * self.zoom + self.zoom//2
+
+    def paintPixel(self, pixel: tuple[int, int]) -> None:
+        painter = QPainter(self.pixmap())
+        painter.setPen(self.pen)
+        pixel = self.scalePixel(pixel)
+        painter.drawPoint(*pixel)
+        painter.end()
+        self.mainWindow.projectData = self.pixmap().scaled(*self.mainWindow.projectSize)
+
+    def floodFill(self, x, y) -> None:
+        image = self.pixmap().toImage()
+        w, h = image.width(), image.height()
+        x, y = x * self.zoom, y * self.zoom
+
+        # Get our target color from origin.
+        target_color = image.pixel(x, y)
+
+        have_seen = set()
+        queue = [(x, y)]
+
+        def get_cardinal_points(have_seen, center_pos):
+            points = []
+            cx, cy = center_pos
+            for x, y in [(1, 0), (0, 1), (-1, 0), (0, -1)]:
+                xx, yy = cx + x, cy + y
+                if (xx >= 0 and xx < w and
+                    yy >= 0 and yy < h and
+                    (xx, yy) not in have_seen):
+
+                    points.append((xx, yy))
+                    have_seen.add((xx, yy))
+
+            return points
+
+        # Now perform the search and fill.
+        p = QPainter(self.pixmap())
+        p.setPen(self.pen.color())
+
+        while queue:
+            x, y = queue.pop()
+            if image.pixel(x, y) == target_color:
+                p.drawPoint(QPoint(x, y))
+                queue[0:0] = get_cardinal_points(have_seen, (x, y))
+
+        self.update()
+
+    def changeColor(self, color: tuple[int, int, int]) -> None:
+        self.mainWindow.color = color
+        self.pen.setColor(QColor(*color))
+
+    def getPixelColor(self, pixel: tuple[int, int]) -> tuple[int, int, int]:
+        self.image = QPixmap.toImage(self.pixmap())
+        pixel = self.scalePixel(pixel)
+        color = self.image.pixelColor(*pixel)
+        return color.getRgb()[:-1]
+
+    def setZoom(self, zoom: int) -> None:
+        self.zoom = zoom
+        newResolution = (self.mainWindow.projectSize[0]*zoom, self.mainWindow.projectSize[1]*zoom)
+        self.setPixmap(self.pixmap().scaled(*newResolution))
+        self.setFixedSize(*newResolution)
+        self.pen.setWidth(self.zoom)
 
 class ToolChangeButton(QToolButton):
     def __init__(self, window, name: str, connect = None) -> None:
@@ -84,6 +150,11 @@ class Editor(QMainWindow):
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
         self.setWindowTitle("Edytor")
+
+        self.drawingBoard = TrackingLabel(self)
+        self.drawingBoard.setMouseTracking(True)
+        self.drawingBoardScroll = TrackingScrollArea(self, self.mainWidget, objectName="drawingSpace")
+        self.drawingBoardScroll.setWidget(self.drawingBoard)
 
         self.refreshSettings()
         self.loadStyleSheet(self.settings['theme'])
@@ -197,11 +268,6 @@ class Editor(QMainWindow):
             "bucket": bucketButton,
         }
 
-        self.drawingBoard = TrackingLabel(self)
-        self.drawingBoard.setMouseTracking(True)
-        self.drawingBoardScroll = TrackingScrollArea(self, self.mainWidget, objectName="drawingSpace")
-        self.drawingBoardScroll.setWidget(self.drawingBoard)
-
         self.hAlignmentWidget = QWidget(self)
         self.hAlignmentWidget.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.hAlignmentWidget.setStyleSheet("background-color: none")
@@ -227,6 +293,7 @@ class Editor(QMainWindow):
 
         self.resize(800, 600)
         self.show()
+        self.zoomEvent(0)
 
     #!Other functions
     def errorMessage(self, text: str, informativeText: str) -> None:
@@ -347,9 +414,9 @@ class Editor(QMainWindow):
             self.projectSize = tuple(int(x) for x in projectData["size"])
             self.projectType = projectData["type"]
             self.projectName = projectData["name"]
-            self.projectData = projectData["contents"]
-            self.lastState = self.projectData
-            self.beforeLineState = self.projectData
+            self.drawingBoard.setPixmap(projectData["contents"])
+            self.lastState = self.drawingBoard.pixmap()
+            self.beforeLineState = self.drawingBoard.pixmap()
             self.setWindowTitle("Projektant - "+self.projectName)
 
             self.updateRecentProjects()
@@ -376,7 +443,7 @@ class Editor(QMainWindow):
             "version": extensionVersion,
             "type": self.projectType,
             "size": self.projectSize,
-            "contents": self.projectData,
+            "contents": PickablePixmap(self.drawingBoard.pixmap().scaled(*self.projectSize)),
             "name": self.projectName
         }
 
@@ -414,8 +481,9 @@ class Editor(QMainWindow):
         if not os.access(os.path.dirname(fileName), os.W_OK):
             self.errorMessage("Nie mozna wyeksportowac projektu", "Sprawdz, czy lokalizacja pliku jest poprawna")
             return
-        image = Image.fromarray(self.projectData)
-        image.save(fileName)
+
+        pixmap = self.drawingBoard.pixmap().scaled(*self.projectSize)
+        pixmap.save(fileName)
 
         self.statusBar().showMessage(f"Wyeksportowano projekt do {fileName}")
 
@@ -437,25 +505,11 @@ class Editor(QMainWindow):
         pixel = floor(labelPos[0]/self.zoom), floor(labelPos[1]/self.zoom)
         return pixel
 
-    def pixelXYToNpXY(self, pixel: tuple[int, int]) -> tuple[int, int]:
-        """Takes XY coordinates on image and converts them onto pixel coordinates on ndarray
-
-        Args:
-            pixel (tuple[int, int]): Pixel location on image
-
-        Returns:
-            tuple[int, int]: Pixel location on ndarray
-        """
-        return pixel[1]*self.projectSize[0]//self.projectSize[1]+pixel[0]//self.projectSize[1], pixel[0]%self.projectSize[1]
-
     def drawPixels(self) -> None:
         """Draws all pixels onto QLabel
         """
-        newImageResolution = (self.projectSize[0]*self.zoom, self.projectSize[1]*self.zoom)
-        self.drawingBoard.setFixedSize(*newImageResolution)
-        image = QImage(self.projectData, *self.projectSize, QImage.Format_RGB888)
-        pixmap = QPixmap.fromImage(image)
-        self.drawingBoard.setPixmap(pixmap.scaled(*newImageResolution, Qt.IgnoreAspectRatio, Qt.FastTransformation))
+        self.drawingBoard.setZoom(self.zoom)
+        self.drawingBoard.update()
 
     def checkXYWithinImage(self, pixel: tuple[int, int]) -> bool:
         """Checks if pixel is within the image
@@ -472,8 +526,8 @@ class Editor(QMainWindow):
 
     def undo(self) -> None:
         if len(self.undoHistory) != 0:
-            self.redoHistory.append(np.copy(self.projectData))
-            self.projectData = self.undoHistory[-1]
+            self.redoHistory.append(QPixmap(self.drawingBoard.pixmap()))
+            self.drawingBoard.setPixmap(QPixmap(self.undoHistory[-1]))
             self.undoHistory = self.undoHistory[:-1]
             self.statusBar().showMessage("Cofnieto (Ctrl+Y aby ponowic)")
         else:
@@ -483,8 +537,8 @@ class Editor(QMainWindow):
 
     def redo(self) -> None:
         if len(self.redoHistory) != 0:
-            self.undoHistory.append(np.copy(self.projectData))
-            self.projectData = self.redoHistory[-1]
+            self.undoHistory.append(QPixmap(self.drawingBoard.pixmap()))
+            self.drawingBoard.setPixmap(QPixmap(self.redoHistory[-1]))
             self.redoHistory = self.redoHistory[:-1]
             self.statusBar().showMessage("Ponowiono (Ctrl+Z aby cofnac)")
             self.drawPixels()
@@ -511,7 +565,7 @@ class Editor(QMainWindow):
         self.lastColors = self.lastColors[:-1]
         self.refreshLastColors()
 
-        self.color = color
+        self.drawingBoard.changeColor(color)
 
         qss = "border: 2px solid lightgray;border-radius: 24px;background-color:rgb%".replace("%", str(tuple(self.color)))
         self.toolButtons["color"].setStyleSheet(qss)
@@ -528,8 +582,8 @@ class Editor(QMainWindow):
     def paintPixel(self, pixel: tuple[int, int]) -> None:
         if not self.checkXYWithinImage(pixel): return
         for pixel in self.symmetrize(pixel):
-            pixel = self.pixelXYToNpXY(pixel)
-            self.projectData[pixel] = self.color
+            self.drawingBoard.paintPixel(pixel)
+        self.drawPixels()
 
     def paintPixels(self, pixels: list) -> None:
         for pixel in pixels:
@@ -573,7 +627,7 @@ class Editor(QMainWindow):
         points = tools.line.getPointListFromCoordinates(start, end)
 
         if self.mouseDown:
-            self.projectData = np.copy(self.beforeLineState)
+            self.drawingBoard.setPixmap(QPixmap(self.beforeLineState))
             self.paintPixels(points)
             self.drawPixels()
 
@@ -583,13 +637,7 @@ class Editor(QMainWindow):
         Args:
             pixel (tuple[int, int]): What pixel to color
         """
-        image = Image.fromarray(self.projectData)
-
-        if image.size == self.projectSize[::-1]:
-            image = Image.fromarray(self.projectData.reshape(*self.projectSize[::-1], 3))
-
-        ImageDraw.floodfill(image, pixel, tuple(self.color))
-        self.projectData = np.array(image, np.uint8).reshape(*self.projectSize, 3)
+        self.drawingBoard.floodFill(*pixel)
 
     def colorPicker(self, pixel: tuple[int, int]) -> None:
         """Function used by color picker tool
@@ -597,7 +645,7 @@ class Editor(QMainWindow):
         Args:
             pixel (tuple[int, int]): Pixel that we will take color info from
         """
-        self.changeColor(self.projectData[self.pixelXYToNpXY(pixel)])
+        self.changeColor(self.drawingBoard.getPixelColor(pixel))
         self.changeTool(self.lastTool)
 
     def colorPickerMove(self, event: QMouseEvent) -> None:
@@ -605,8 +653,7 @@ class Editor(QMainWindow):
         arrayPosition = self.getPixelXYFromXY(position)
 
         if self.checkXYWithinImage(arrayPosition):
-            arrayPosition = self.pixelXYToNpXY(arrayPosition)
-            color = tuple(self.projectData[arrayPosition])
+            color = self.drawingBoard.getPixelColor(arrayPosition)
             self.toolLabel.show()
         else:
             self.toolLabel.hide()
@@ -627,16 +674,13 @@ class Editor(QMainWindow):
         super().mousePressEvent(event)
         self.mouseDown = True
         self.mouseDownPosition = event.pos().x(), event.pos().y()-23
-        self.undoHistory.append(np.copy(self.projectData))
-        self.beforeLineState = np.copy(self.projectData)
+        self.undoHistory.append(QPixmap(self.drawingBoard.pixmap()))
+        self.beforeLineState = QPixmap(self.drawingBoard.pixmap())
         self.mouseMoveEvent(event)
         self.toolLabel.hide()
 
         if len(self.undoHistory) > self.undoLength:
             self.undoHistory = self.undoHistory[1:]
-
-        if not (self.undoHistory[-1]==self.projectData).all():
-            self.redoHistory = []
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         super().mouseReleaseEvent(event)
@@ -651,6 +695,9 @@ class Editor(QMainWindow):
 
         self.tools[self.tool][0](pixel)
         self.drawPixels()
+
+        if not self.checkXYWithinImage(pixel): return
+        self.redoHistory = []
 
     def drawingBoardMoveEvent(self, event: QMouseEvent) -> None:
         if self.tools[self.tool][1] is not None:
@@ -721,5 +768,4 @@ class Editor(QMainWindow):
 
         self.zoomIndicator.setText(str(round(self.zoom*100))+"%")
         self.drawPixels()
-        QApplication.processEvents()
         self.alignLabel()

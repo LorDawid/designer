@@ -1,12 +1,13 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import numpy as np
 import pickle
 import json
 import os
 
-extensionVersion = "1.0"
+from customWidgets import *
+
+extensionVersion = "2.0"
 
 class NewProject(QWidget):
     PROJECTTYPES = {
@@ -117,7 +118,8 @@ class NewProject(QWidget):
             self.errorMessage("Wybrany rozmiar nie jest liczbami", "Sprawdz, czy rozmiar zostal poprawnie wpisany")
             return
 
-        contents = np.full((size[0],size[1],3), fill_value=self.settings["defaultColor"], dtype=np.uint8)
+        contents = PickablePixmap(*size)
+        contents.fill(QColor(*self.settings["defaultColor"]))
 
         toWrite = {
             "version": extensionVersion,

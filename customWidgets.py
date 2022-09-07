@@ -2,6 +2,20 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
+class PickablePixmap(QPixmap):
+    def __reduce__(self):
+        return type(self), (), self.__getstate__()
+
+    def __getstate__(self):
+        ba = QByteArray()
+        stream = QDataStream(ba, QIODevice.WriteOnly)
+        stream << self
+        return ba
+
+    def __setstate__(self, ba):
+        stream = QDataStream(ba, QIODevice.ReadOnly)
+        stream >> self
+
 class ColorChangeWidget(QHBoxLayout):
     C_CHG_QSS = """
     border: 2px solid lightgray;
