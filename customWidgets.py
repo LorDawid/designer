@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
+#stolen from https://stackoverflow.com/a/62401768/18104054
 class PickablePixmap(QPixmap):
     def __reduce__(self):
         return type(self), (), self.__getstate__()

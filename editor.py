@@ -1,4 +1,3 @@
-from PIL import Image, ImageDraw
 from functools import partial
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -62,6 +61,7 @@ class TrackingLabel(QLabel):
         painter.end()
         self.mainWindow.projectData = self.pixmap().scaled(*self.mainWindow.projectSize)
 
+    #stolen from https://www.pythonguis.com/faq/implementing-qpainter-flood-fill-pyqt5pyside/
     def floodFill(self, x, y) -> None:
         image = self.pixmap().toImage()
         w, h = image.width(), image.height()
