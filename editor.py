@@ -145,7 +145,7 @@ class ToolChangeButton(QToolButton):
 
 class Editor(QMainWindow):
     def __init__(self, filepath: str) -> None:
-        self.xj = 0
+        self.refreshSettings()
         self.zoom = 1
         self.lastColors = [(255,255,255) for _ in range(0, 8)]
         self.color = (0, 0, 0)
@@ -153,7 +153,7 @@ class Editor(QMainWindow):
         self.mouseDown = False
         self.undoHistory = []
         self.redoHistory = []
-        self.undoLength = 20
+        self.undoLength = self.settings["clipboardSize"]
 
         self.lastDrawingBoardGeometry = QRect(0, 0, 0, 0)
         self.mouseDownPosition = (0, 0)
@@ -172,7 +172,6 @@ class Editor(QMainWindow):
         self.drawingBoardScroll = TrackingScrollArea(self, self.mainWidget, objectName="drawingSpace")
         self.drawingBoardScroll.setWidget(self.drawingBoard)
 
-        self.refreshSettings()
         self.loadStyleSheet(self.settings['theme'])
         self.filepath = filepath
         self.loadProject(self.filepath)
@@ -210,7 +209,7 @@ class Editor(QMainWindow):
 
         self.saveTimer = QTimer()
         self.saveTimer.timeout.connect(self.autoSaveProject)
-        self.saveTimer.setInterval(60000)
+        self.saveTimer.setInterval(self.settings["autosaveTime"])
         self.saveTimer.start()
 
         self.mainLayout = QVBoxLayout(self.mainWidget)

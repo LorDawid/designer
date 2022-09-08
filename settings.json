@@ -4,5 +4,7 @@
     "gridColor": [50, 50, 50],
     "gridVisibility": 400,
     "defaultColor": [255, 255, 255],
-    "defaultSaveLocation": "C:\\Users\\szost\\Desktop\\"
+    "defaultSaveLocation": "C:\\Users\\szost\\Desktop\\",
+    "autosaveTime": 60000,
+    "clipboardSize": 20
 }

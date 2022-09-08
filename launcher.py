@@ -55,7 +55,7 @@ class Launcher(QWidget):
         self.settingsButton.setIcon(QIcon(f"icons/{self.settings['theme']}/settings.png"))
         self.settingsButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.settingsButton.setText("  Ustawienia")
-        self.settingsButton.clicked.connect(self.openProject)
+        self.settingsButton.clicked.connect(self.settingsWindow.show)
 
         self.options.addWidget(QLabel(text="Rozpocznij", objectName="recentsTitle"))
         self.options.addWidget(self.newProjectButton)
