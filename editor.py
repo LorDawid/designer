@@ -63,11 +63,17 @@ class TrackingLabel(QLabel):
 
     def paintPixels(self, pixels: list) -> None:
         if len(pixels) == 0: return
+
         painter = QPainter(self.pixmap())
         painter.setPen(self.pen)
-        for index, pixel in enumerate(pixels):
-            pixels[index] = QPoint(*self.scalePixel(pixel))
-        painter.drawPoints(*pixels)
+
+        newPixels = []
+        for pixel in pixels:
+            newPixels.extend(self.mainWindow.symmetrize(pixel))
+
+        for index, pixel in enumerate(newPixels):
+            newPixels[index] = QPoint(*self.scalePixel(pixel))
+        painter.drawPoints(*newPixels)
         painter.end()
         self.mainWindow.projectData = self.pixmap().scaled(*self.mainWindow.projectSize)
 
