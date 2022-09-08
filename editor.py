@@ -61,6 +61,16 @@ class TrackingLabel(QLabel):
         painter.end()
         self.mainWindow.projectData = self.pixmap().scaled(*self.mainWindow.projectSize)
 
+    def paintPixels(self, pixels: list) -> None:
+        if len(pixels) == 0: return
+        painter = QPainter(self.pixmap())
+        painter.setPen(self.pen)
+        for index, pixel in enumerate(pixels):
+            pixels[index] = QPoint(*self.scalePixel(pixel))
+        painter.drawPoints(*pixels)
+        painter.end()
+        self.mainWindow.projectData = self.pixmap().scaled(*self.mainWindow.projectSize)
+
     #stolen from https://www.pythonguis.com/faq/implementing-qpainter-flood-fill-pyqt5pyside/
     def floodFill(self, x, y) -> None:
         image = self.pixmap().toImage()
@@ -586,8 +596,8 @@ class Editor(QMainWindow):
         self.drawPixels()
 
     def paintPixels(self, pixels: list) -> None:
-        for pixel in pixels:
-            self.paintPixel(pixel)
+        self.drawingBoard.paintPixels(pixels)
+        self.drawPixels()
 
     def symmetrize(self, pixel: tuple[int, int]) -> list:
         pixelList = [pixel]
