@@ -160,12 +160,18 @@ class Editor(QMainWindow):
         super().__init__()
 
         #!
-        self.gridColor = (50, 50, 50)
-        self.gridHideRange = 8
+        self.gridColor = tuple(self.settings["gridColor"])
+        self.gridHideRange = self.settings["gridVisibility"]
+        self.showGrid = self.settings["gridEnabled"]
 
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
         self.setWindowTitle("Edytor")
+
+        self.hCenterLabel1 = QLabel(self, objectName="centerLabel")
+        self.hCenterLabel2 = QLabel(self, objectName="centerLabel")
+        self.vCenterLabel1 = QLabel(self, objectName="centerLabel")
+        self.vCenterLabel2 = QLabel(self, objectName="centerLabel")
 
         self.drawingBoard = TrackingLabel(self)
         self.drawingBoard.setMouseTracking(True)
@@ -404,10 +410,14 @@ class Editor(QMainWindow):
         hgeometry = (geometry.x()+8, geometry.y()+93, geometry.width()+1, geometry.height())
         self.hAlignmentWidget.setGeometry(*hgeometry)
         self.hGridLayout.setSpacing(self.zoom-1)
+        self.hCenterLabel1.setGeometry(QRect(0, geometry.top()+geometry.height()//2+93-self.zoom//2, geometry.left()+9, self.zoom))
+        self.hCenterLabel2.setGeometry(QRect(geometry.right()+9, geometry.top()+geometry.height()//2+93-self.zoom//2, self.width()-geometry.right()+9, self.zoom))
 
         vgeometry = (geometry.x()+8, geometry.y()+93, geometry.width(), geometry.height()+1)
         self.vAlignmentWidget.setGeometry(*vgeometry)
         self.vGridLayout.setSpacing(self.zoom-1)
+        self.vCenterLabel1.setGeometry(QRect(geometry.left()+geometry.width()//2+9-self.zoom//2, 0, self.zoom, geometry.top()+93))
+        self.vCenterLabel2.setGeometry(QRect(geometry.left()+geometry.width()//2+9-self.zoom//2, geometry.bottom()+93, self.zoom, self.height()-geometry.bottom()))
 
         self.lastDrawingBoardGeometry = geometry
 
@@ -767,14 +777,13 @@ class Editor(QMainWindow):
         elif zoomAmount < 0:
             self.zoom /= 2
 
-        if self.zoom < .5:
-            self.zoom = abs(self.zoom)
+        if self.zoom < 1:
             self.zoom *= 2
 
         if self.zoom > 64:
             self.zoom /= 2
 
-        if self.zoom < self.gridHideRange:
+        if self.zoom < self.gridHideRange//100 or not self.settings["gridEnabled"]:
             self.hAlignmentWidget.hide()
             self.vAlignmentWidget.hide()
         else:
