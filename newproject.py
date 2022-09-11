@@ -6,6 +6,7 @@ import json
 import os
 
 from customWidgets import *
+from resolutionCalc import Calculator
 
 extensionVersion = "2.0"
 
@@ -41,20 +42,26 @@ class NewProject(QWidget):
         self.fileLocationLayout.addWidget(self.fileLocationInput)
         self.fileLocationLayout.addWidget(self.fileLocationButton)
 
+        self.calculator = Calculator(self)
         sizeRange = QIntValidator()
         sizeRange.setRange(5, 500)
         self.sizeLayout = QHBoxLayout()
         self.xSize = QLineEdit(text="0")
         self.xSize.textChanged.connect(self.sizeChanged)
+        self.xSize.setAlignment(Qt.AlignCenter)
         self.xSize.setFixedHeight(40)
         self.xSize.setValidator(sizeRange)
         self.ySize = QLineEdit(text="0")
+        self.ySize.setAlignment(Qt.AlignCenter)
         self.ySize.setFixedHeight(40)
         self.ySize.setValidator(sizeRange)
         self.ySize.textChanged.connect(self.sizeChanged)
+        self.calc = QToolButton(text="", clicked=self.calculator.show)
+        self.calc.setFixedSize(40, 40)
         self.sizeLayout.addWidget(self.xSize)
         self.sizeLayout.addWidget(QLabel(text="x"))
         self.sizeLayout.addWidget(self.ySize)
+        self.sizeLayout.addWidget(self.calc)
 
         self.estSize = QLabel(text="Szacowany rozmiar: 0B", objectName="smallLabel")
 
