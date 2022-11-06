@@ -1,3 +1,4 @@
+# pyright: reportGeneralTypeIssues=false, reportWildcardImportFromLibrary=false
 from functools import partial
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -344,7 +345,7 @@ class Editor(QMainWindow):
 
     def log(self) -> None:
         '''Used for debuggging'''
-        return
+        self.getProjectPixels()
 
     #!UI generation and management functions
     def refreshStyleSheet(self, widget: QWidget) -> None:
@@ -511,6 +512,18 @@ class Editor(QMainWindow):
         pixmap.save(fileName)
 
         self.statusBar().showMessage(f"Wyeksportowano projekt do {fileName}")
+
+    def getProjectPixels(self) -> None:
+        pixels = {}
+        image = QPixmap.toImage(self.drawingBoard.pixmap()).scaled(*self.projectSize)
+
+        for x in range(self.projectSize[0]):
+            for y in range(self.projectSize[1]):
+                color = image.pixelColor(x, y).getRgb()[:-1]
+                try: pixels[color] += 1
+                except KeyError: pixels[color] = 1
+
+        print(pixels)
 
     #!Drawing board event functions
     def getPixelXYFromXY(self, coordinates: QPoint) -> tuple[int, int]:

@@ -1,3 +1,4 @@
+# pyright: reportGeneralTypeIssues=false, reportWildcardImportFromLibrary=false
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
