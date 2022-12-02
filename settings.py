@@ -8,6 +8,12 @@ import os
 
 from customWidgets import *
 
+def getAbsPath(relPath: str) -> str:
+    absFile = __file__
+    absFile = "\\".join(absFile.split("\\")[:-1])
+
+    return os.path.join(absFile, relPath)
+
 class SettingWidget(QHBoxLayout):
     def __init__(self, parent, text: str, clickableWidget: QWidget, widgetWidth: int = None) -> None:
         super().__init__()
@@ -78,7 +84,7 @@ class Settings(QWidget):
         self.refreshSettings()
 
     def loadStyleSheet(self, color: str) -> None:
-        with open(f"styles/{color}.qss", "r") as file:
+        with open(getAbsPath(f"styles/{color}.qss")) as file:
             self.setStyleSheet(file.read())
 
     def errorMessage(self, text: str, informativeText: str) -> None:
@@ -93,7 +99,7 @@ class Settings(QWidget):
         message.exec_()
 
     def refreshSettings(self) -> None:
-        with open("settings.json", "r") as file:
+        with open(getAbsPath("settings.json")) as file:
             settings = json.loads(file.read())
 
         self.loadStyleSheet(settings["theme"])
@@ -137,7 +143,7 @@ class Settings(QWidget):
                 "clipboardSize" : int(self.clipboardSize.clickableWidget.text())
             }
 
-            with open("settings.json", "w") as file:
+            with open(getAbsPath("settings.json")) as file:
                 file.write(json.dumps(settings))
 
             python = sys.executable

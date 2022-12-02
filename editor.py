@@ -13,6 +13,14 @@ import tools.line
 
 extensionVersion = "2.0"
 
+def getAbsPath(relPath: str) -> str:
+    absFile = __file__
+    absFile = "\\".join(absFile.split("\\")[:-1])
+
+    absPath = os.path.join(absFile, relPath)
+
+    return absPath
+
 #Those two classes exists to be able to track mouse movement when not pressed
 class TrackingScrollArea(QScrollArea):
     def __init__(self, mainWindow, parent, objectName):
@@ -127,6 +135,7 @@ class TrackingLabel(QLabel):
         return color.getRgb()[:-1]
 
     def setZoom(self, zoom: int) -> None:
+        zoom = round(zoom)
         self.zoom = zoom
         newResolution = (self.mainWindow.projectSize[0]*zoom, self.mainWindow.projectSize[1]*zoom)
         self.setPixmap(self.pixmap().scaled(*newResolution))
@@ -141,7 +150,8 @@ class ToolChangeButton(QToolButton):
         else: self.clicked.connect(connect)
         self.setMaximumSize(48, 48)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.setIcon(QIcon(f"icons/{window.settings['theme']}/{name}.png"))
+
+        self.setIcon(QIcon(getAbsPath(f"icons/{window.settings['theme']}/{name}.png")))
         self.setIconSize(QSize(32, 32))
 
 class Editor(QMainWindow):
@@ -184,13 +194,13 @@ class Editor(QMainWindow):
         self.loadProject(self.filepath)
 
         sizeMessage = QToolButton(text = f"  {self.projectSize[0]} x {self.projectSize[1]}  ", objectName="smallLabel")
-        sizeMessage.setIcon(QIcon(f"icons/{self.settings['theme']}/size.png"))
+        sizeMessage.setIcon(QIcon(getAbsPath(f"icons/{self.settings['theme']}/size.png")))
         sizeMessage.setIconSize(QSize(12, 12))
         sizeMessage.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.statusBar().addPermanentWidget(sizeMessage)
 
         self.mouseMessage = QToolButton(text = f"  {self.projectSize[0]} x {self.projectSize[1]}  ", objectName="smallLabel")
-        self.mouseMessage.setIcon(QIcon(f"icons/{self.settings['theme']}/move.png"))
+        self.mouseMessage.setIcon(QIcon(getAbsPath(f"icons/{self.settings['theme']}/move.png")))
         self.mouseMessage.setIconSize(QSize(12, 12))
         self.mouseMessage.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.statusBar().addPermanentWidget(self.mouseMessage)
@@ -335,12 +345,13 @@ class Editor(QMainWindow):
         Args:
             color (str): file name (no extensions)
         """
-        with open(f"styles/{color}.qss", "r") as file:
+        print(getAbsPath(f"styles/{color}.qss"))
+        with open(getAbsPath(f"styles/{color}.qss")) as file:
             self.setStyleSheet(file.read())
 
     def refreshSettings(self) -> None:
         """Loads settings from settings.json"""
-        with open("settings.json", "r") as file:
+        with open(getAbsPath("settings.json")) as file:
             self.settings = json.loads(file.read())
 
     def log(self) -> None:
@@ -407,6 +418,8 @@ class Editor(QMainWindow):
         geometry = self.drawingBoard.geometry()
 
         if self.lastDrawingBoardGeometry == geometry: return
+
+        self.zoom = floor(self.zoom) #i dont know why it doesnt work..
 
         hgeometry = (geometry.x()+8, geometry.y()+93, geometry.width()+1, geometry.height())
         self.hAlignmentWidget.setGeometry(*hgeometry)
@@ -489,7 +502,7 @@ class Editor(QMainWindow):
     def updateRecentProjects(self) -> None:
         """Updates recent project list with current project
         """
-        with open("recentProjects.json", "r") as file:
+        with open(getAbsPath("recentProjects.json"), "r") as file:
             recents = json.loads(file.read())
 
         recents[self.filepath] = {
@@ -497,7 +510,7 @@ class Editor(QMainWindow):
             "type": self.projectType
         }
 
-        with open("recentProjects.json", "w") as file:
+        with open(getAbsPath("recentProjects.json"), "w") as file:
             recents = file.write(json.dumps(recents))
 
     def exportProject(self) -> None:
@@ -523,7 +536,7 @@ class Editor(QMainWindow):
                 try: pixels[color] += 1
                 except KeyError: pixels[color] = 1
 
-        print(pixels)
+        # print(pixels)
 
     #!Drawing board event functions
     def getPixelXYFromXY(self, coordinates: QPoint) -> tuple[int, int]:

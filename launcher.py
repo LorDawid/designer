@@ -11,6 +11,12 @@ import os
 from newproject import NewProject
 from settings import Settings
 
+def getAbsPath(relPath: str) -> str:
+    absFile = __file__
+    absFile = "\\".join(absFile.split("\\")[:-1])
+
+    return os.path.join(absFile, relPath)
+
 class Launcher(QWidget):
     PROJECTTYPES = {
         "bracelet": "Bransoletka"
@@ -19,7 +25,7 @@ class Launcher(QWidget):
     def __init__(self) -> None:
         super().__init__()
         self.resize(800, 600)
-        self.setWindowIcon(QIcon("icons/designer.png"))
+        self.setWindowIcon(QIcon(getAbsPath("icons/designer.png")))
         self.setWindowTitle("Projektant")
 
         self.settingsWindow = Settings()
@@ -39,21 +45,21 @@ class Launcher(QWidget):
 
         self.newProjectButton = QToolButton(objectName="projectManagerButton")
         self.newProjectButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        self.newProjectButton.setIcon(QIcon(f"icons/{self.settings['theme']}/plus.png"))
+        self.newProjectButton.setIcon(QIcon(getAbsPath(f"icons/{self.settings['theme']}/plus.png")))
         self.newProjectButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.newProjectButton.setText("  Stworz nowy projekt")
         self.newProjectButton.clicked.connect(self.newProject)
 
         self.openProjectButton = QToolButton(objectName="projectManagerButton")
         self.openProjectButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        self.openProjectButton.setIcon(QIcon(f"icons/{self.settings['theme']}/document.png"))
+        self.openProjectButton.setIcon(QIcon(getAbsPath(f"icons/{self.settings['theme']}/document.png")))
         self.openProjectButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.openProjectButton.setText("  Otworz istniejacy projekt")
         self.openProjectButton.clicked.connect(self.openProject)
 
         self.settingsButton = QToolButton(objectName="projectManagerButton")
         self.settingsButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        self.settingsButton.setIcon(QIcon(f"icons/{self.settings['theme']}/settings.png"))
+        self.settingsButton.setIcon(QIcon(getAbsPath(f"icons/{self.settings['theme']}/settings.png")))
         self.settingsButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.settingsButton.setText("  Ustawienia")
         self.settingsButton.clicked.connect(self.settingsWindow.show)
@@ -65,14 +71,14 @@ class Launcher(QWidget):
         self.options.addItem(QSpacerItem(2, 2, QSizePolicy.Expanding, QSizePolicy.Expanding))
 
         githubButton = QToolButton(text="  Github | LorDawid")
-        githubButton.setIcon(QIcon(f"icons/{self.settings['theme']}/github.png"))
+        githubButton.setIcon(QIcon(getAbsPath(f"icons/{self.settings['theme']}/github.png")))
         githubButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         githubButton.setStyleSheet("border: none; font-size: 13px;")
         githubButton.clicked.connect(lambda: QDesktopServices.openUrl(QUrl("https://www.github.com/LorDawid/designer")))
         self.options.addWidget(githubButton)
 
         freepikButton = QToolButton(text="  Icons from Freepik")
-        freepikButton.setIcon(QIcon(f"icons/{self.settings['theme']}/freepik.png"))
+        freepikButton.setIcon(QIcon(getAbsPath(f"icons/{self.settings['theme']}/freepik.png")))
         freepikButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         freepikButton.setStyleSheet("border: none; font-size: 13px;")
         freepikButton.clicked.connect(lambda: QDesktopServices.openUrl(QUrl("https://www.freepik.com/")))
@@ -98,11 +104,11 @@ class Launcher(QWidget):
         self.titleLayout.setStretch(1, 1)
 
     def loadStyleSheet(self, color: str) -> None:
-        with open(f"styles/{color}.qss", "r") as file:
+        with open(getAbsPath(f"styles/{color}.qss")) as file:
             self.setStyleSheet(file.read())
 
     def loadRecentProjects(self) -> None:
-        with open("recentProjects.json") as file:
+        with open(getAbsPath("recentProjects.json")) as file:
             recents = json.loads(file.read())
 
         self.recents = []
@@ -131,7 +137,7 @@ class Launcher(QWidget):
             self.recents.append(file)
 
     def refreshSettings(self) -> None:
-        with open("settings.json", "r") as file:
+        with open(getAbsPath("settings.json")) as file:
             self.settings = json.loads(file.read())
 
     def openProject(self) -> None:

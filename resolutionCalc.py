@@ -8,6 +8,12 @@ import os
 
 from settings import SettingWidget
 
+def getAbsPath(relPath: str) -> str:
+    absFile = __file__
+    absFile = "\\".join(absFile.split("\\")[:-1])
+
+    return os.path.join(absFile, relPath)
+
 class Calculator(QWidget):
     def __init__(self, newProjectWindow):
         super().__init__()
@@ -46,11 +52,11 @@ class Calculator(QWidget):
         message.exec_()
 
     def loadStyleSheet(self, color: str) -> None:
-        with open(f"styles/{color}.qss", "r") as file:
+        with open(getAbsPath(f"styles/{color}.qss")) as file:
             self.setStyleSheet(file.read())
 
     def refreshSettings(self) -> None:
-        with open("settings.json", "r") as file:
+        with open(getAbsPath("settings.json"), "r") as file:
             self.settings = json.loads(file.read())
 
     def calculate(self) -> None:

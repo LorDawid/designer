@@ -11,6 +11,12 @@ from resolutionCalc import Calculator
 
 extensionVersion = "2.0"
 
+def getAbsPath(relPath: str) -> str:
+    absFile = __file__
+    absFile = "\\".join(absFile.split("\\")[:-1])
+
+    return os.path.join(absFile, relPath)
+
 class NewProject(QWidget):
     PROJECTTYPES = {
         "Bransoletka": "bracelet"
@@ -147,11 +153,11 @@ class NewProject(QWidget):
         self.launcherWindow.openEditor(filePath)
 
     def loadStyleSheet(self, color: str) -> None:
-        with open(f"styles/{color}.qss", "r") as file:
+        with open(getAbsPath(f"styles/{color}.qss")) as file:
             self.setStyleSheet(file.read())
 
     def refreshSettings(self) -> None:
-        with open("settings.json", "r") as file:
+        with open(getAbsPath("settings.json")) as file:
             self.settings = json.loads(file.read())
 
     def projectNameChanged(self) -> None:
