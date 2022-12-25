@@ -143,13 +143,13 @@ class Settings(QWidget):
                 "clipboardSize" : int(self.clipboardSize.clickableWidget.text())
             }
 
-            with open(getAbsPath("settings.json")) as file:
+            with open(getAbsPath("settings.json"), "w") as file:
                 file.write(json.dumps(settings))
 
             python = sys.executable
             os.execl(python, python, *sys.argv)
 
-        except Exception:
+        except Exception as e:
             self.errorMessage("Nie mozna zapisac ustawien", "Sprawdz, czy wszystko zostalo poprawnie wypelnione")
 
     def showEvent(self, event: QShowEvent) -> None:
